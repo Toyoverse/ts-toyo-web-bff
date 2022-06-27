@@ -46,6 +46,7 @@ export class EnvironmentService {
   }
 
   async findBoxesByWalletId(walletAddress: string) {
+    try {
     const boxesOnChain =
       await this.onchainService.getTokenOwnerEntityByWalletAndTypeId(
         walletAddress,
@@ -60,51 +61,61 @@ export class EnvironmentService {
           TypeId.TOYO_JAKANA_SEED_BOX,
         ],
       );
-    /*
-     * [{tokenId: 5}, {tokenId: 7}, {tokenId: 8}] -> essa é a mais confiável
-     *
-     */
-
-    const variasCaixasOffChain = await this.boxService.getBoxesByWalletId(
+    const boxesOffChain = await this.boxService.getBoxesByWalletId(
       walletAddress,
     );
-    /*
-     * [{tokenId: 5}, {tokenId: 9}]
-     *
-     */
 
     // TODO Depois...
     // if (boxesOnChain.length !== boxesOffChain.length) {
     //   //precisa rodar background job para atualizar dados
     // }
 
-    //retornar o que é certo
-    //para cada caixa onchain, checar se typeId bate,
+    const boxes = []
 
-    //pesquisar sobre reduce no javascript
-    const boxes = [];
+    for (const box of boxesOnChain){
+      let result = boxesOffChain.find(value => value.tokenId === box.tokenId);
 
-    for (const box of boxesOnChain) {
-      for (const umaCaixaOffChain of variasCaixasOffChain) {
-        if (box.tokenId === umaCaixaOffChain.tokenId) {
-          boxes.push({
-            ...box,
-            isOpen: umaCaixaOffChain.isOpen,
-          });
-        } else {
-          //aqui signifca que a caixa mudou de dono ou comprou nova
-          //precisa preencher com os dados normalmente
-        }
+      if (!result){
+        boxes.push({
+          ...box,
+          isOpen: this.isOpen(box.typeId), 
+          idOpenBox: null,
+          idClosedBox: null,
+          specification: {
+            "name": "",
+            "priority": "",
+            "size": "regular",
+            "cost": "",
+            "set": "",
+            "chanceModifier": "",
+            "illustrationModifier": ""
+          },
+          lastUnboingStarted: null,
+        });
+      }
+      else {
+        boxes.push({
+          ...result,
+          currentOwner: walletAddress,
+        });
       }
     }
 
-    //popular com os dados adicionais offchain, isto é, descrição da caixa, se isOpen, idcaixa aberta, id caixa fechada,
-    //tipo, specications, type, lastUboxingStarted, idToyo caso isOpen
-
     return {
       wallet: walletAddress,
-      boxes: boxesOnChain.concat(variasCaixasOffChain),
+      boxes: boxes,
     };
+  } catch (error) {
+    response.status(500).json({
+      error: [error.message],
+    });
+  }
+  }
+  private isOpen(box: any): boolean{
+    return box == TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX ||
+            box == TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX ||
+            box == TypeId.OPEN_JAKANA_SEED_BOX ||
+            box == TypeId.OPEN_KYTUNT_SEED_BOX;
   }
 
   /**
