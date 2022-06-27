@@ -14,10 +14,12 @@ export default class BoxModel implements Box {
   idClosedBox: string;
   player?: PlayerModel;
   parts: PartsModel[];
-  createdAt: Date;
-  updateAt: Date;
+  createdAt?: Date;
+  updateAt?: Date;
   tokenId: string;
   typeId: string;
+  specification?: string[];
+  lastUnboxingStartedAt?: Date;
 
   constructor() {}
 

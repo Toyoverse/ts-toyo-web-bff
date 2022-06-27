@@ -60,8 +60,6 @@ export class BoxService {
         boxesOffChain.push(await this.BoxMapper(box));
       }
 
-      console.log(boxesOffChain);
-
       return boxesOffChain;
     } catch (error) {
       response.status(500).json({
@@ -88,10 +86,12 @@ export class BoxService {
       parts: boxIsOpen
         ? await this.PartsMapper(await result.relation('parts').query().find())
         : undefined,
-      createdAt: result.get('createdAt'),
-      updateAt: result.get('updatedAt'),
+      //createdAt: result.get('createdAt'),
+      //updateAt: result.get('updatedAt'),
       typeId: result.get('typeId'),
       tokenId: result.get('tokenId'),
+      specification: result.get('specifications'),
+      lastUnboxingStartedAt: result.get('lastUnboxingStartedAt'),
     };
   }
   private async PartsMapper(

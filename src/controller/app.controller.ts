@@ -38,7 +38,7 @@ export class AppController {
   async getPlayerBoxes(@Req() request: Request, @Res() response: Response) {
     try {
       const player = await this.EnvironmentService.findBoxesByWalletId(
-        request.walletId,
+        request.walletId
       );
 
       if (player.wallet === request.walletId) {
