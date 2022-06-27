@@ -1,12 +1,12 @@
 import { Parts } from './Part';
 import { Player } from './Player';
-import { Toyo } from './Toyo';
+import { IToyo } from './IToyo';
 
 export interface Box {
   id: string;
   type: number;
   isOpen: boolean;
-  toyo: Toyo;
+  toyo: IToyo;
   hash: string;
   idOpenBox: string;
   idClosedBox: string;

@@ -3,21 +3,24 @@ import { ConfigService } from '@nestjs/config';
 import ToyoModel from '../models/Toyo.model';
 import * as Parse from 'parse/node';
 import { response } from 'express';
-import { json } from 'stream/consumers';
 import PartModel from 'src/models/Part.model';
 import { PartService } from './part.service';
+import { OnchainService } from './onchain.service';
+import { TypeId } from 'src/enums/SmartContracts';
+import { IToyo, IToyoPersona } from '../models/interfaces';
 
 @Injectable()
 export class ToyoService {
   constructor(
     private configService: ConfigService,
     private readonly partService: PartService,
+    private readonly onchainService: OnchainService,
   ) {
     this.ParseServerConfiguration();
   }
 
   async findToyoById(id: string): Promise<ToyoModel> {
-    const Toyo = Parse.Object.extend('Toyo', ToyoModel);
+    const Toyo = Parse.Object.extend('Toyo');
     const toyoQuery = new Parse.Query(Toyo);
     toyoQuery.equalTo('objectId', id);
 
@@ -40,6 +43,69 @@ export class ToyoService {
     }
   }
 
+  async findToyoByTokenId(tokenId: string): Promise<Parse.Object[]> {
+    const Toyo = Parse.Object.extend('Toyo');
+    const toyoQuery = new Parse.Query(Toyo);
+    toyoQuery.equalTo('tokenId', tokenId);
+
+    try {
+      const result = await toyoQuery.find();
+      return result;
+    } catch (error) {
+      response.status(500).json({
+        error: [error.message],
+      });
+    }
+  }
+
+  async getOffChainToyos(walletAddress: string): Promise<Parse.Object[]> {
+    try {
+      const Toyo = Parse.Object.extend('Players');
+      const toyoQuery: Parse.Query = new Parse.Query(Toyo);
+
+      toyoQuery.equalTo('walletAddress', walletAddress);
+
+      const player = await toyoQuery.find();
+      const toyos = await player[0]
+        .relation('toyos')
+        .query()
+        .include('toyoPersonaOrigin')
+        .find();
+
+      return toyos;
+    } catch (error) {
+      response.status(500).json({
+        error: [error.message],
+      });
+    }
+  }
+
+  async getToyosByWalletAddress(walletAddress: string): Promise<ToyoModel[]> {
+    const onChainToyos =
+      await this.onchainService.getTokenOwnerEntityByWalletAndTypeId(
+        walletAddress,
+        [TypeId.TOYO],
+      );
+
+    const offChainToyos = await this.getOffChainToyos(walletAddress);
+    const toyos: Array<ToyoModel> = [];
+    for (const item of onChainToyos) {
+      const toyo: Parse.Object = offChainToyos.find(
+        (tOff) => tOff.get('tokenId') === item.tokenId,
+      );
+      if (toyo) {
+        toyos.push(await this.ToyoMapper(toyo));
+      } else {
+        const newToyo = await this.findToyoByTokenId(item.tokenId);
+        if (newToyo.length === 1) {
+          //TODO Background job to update this new Toyo to Current Player
+          toyos.push(await this.ToyoMapper(newToyo[0]));
+        }
+      }
+    }
+    return toyos;
+  }
+
   private async ToyoMapper(
     result: Parse.Object<Parse.Attributes>,
   ): Promise<ToyoModel> {
@@ -47,13 +113,28 @@ export class ToyoService {
 
     toyo.id = result.id;
     toyo.name = result.get('name');
-    toyo.parts = await this.PartsMapper(
-      await result.relation('parts').query().find(),
-    );
     toyo.hasTenParts = result.get('hasTenParts');
     toyo.isToyoSelected = result.get('isToyoSelected');
     toyo.createdAt = result.get('createdAt');
     toyo.updateAt = result.get('updatedAt');
+    toyo.tokenId = result.get('tokenId');
+    toyo.transactionHash = result.get('transactionHash');
+
+    const personaOrigin: IToyoPersona = result
+      .get('toyoPersonaOrigin')
+      .toJSON();
+
+    if (personaOrigin) {
+      toyo.toyoPersona = {
+        name: personaOrigin.name,
+        region: personaOrigin.region,
+        video: personaOrigin.video,
+        thumbnail: personaOrigin.thumbnail,
+        bodyType: personaOrigin.bodyType,
+        description: personaOrigin.description,
+        rarity: personaOrigin.rarity,
+      };
+    }
 
     return toyo;
   }

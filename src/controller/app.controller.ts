@@ -1,10 +1,14 @@
 import { Controller, Get, Param, Req, Res } from '@nestjs/common';
-import { EnvironmentService } from '../service/environment.service';
+import { EnvironmentService, ToyoService } from '../service';
 import { Request, Response } from 'express';
+import ToyoModel from 'src/models/Toyo.model';
 
 @Controller('/player')
 export class AppController {
-  constructor(private readonly EnvironmentService: EnvironmentService) {}
+  constructor(
+    private readonly EnvironmentService: EnvironmentService,
+    private readonly toyoService: ToyoService,
+  ) {}
 
   @Get('/environment')
   async environment(@Req() request: Request, @Res() response: Response) {
@@ -54,7 +58,20 @@ export class AppController {
   }
 
   @Get('/toyos')
-  async getPlayerToyos(@Req() request: Request, @Res() response: Response) {}
+  async getPlayerToyos(@Req() request: Request, @Res() response: Response) {
+    try {
+      const playerToyos: ToyoModel[] =
+        await this.toyoService.getToyosByWalletAddress(request.walletId);
+
+      return response.status(200).json({
+        toyos: playerToyos,
+      });
+    } catch {
+      return response.status(500).json({
+        errors: ['Error could not return boxes'],
+      });
+    }
+  }
 
   @Get('/toyo/:id')
   async getToyoDetail(

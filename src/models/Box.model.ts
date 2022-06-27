@@ -1,14 +1,14 @@
 import { Box } from './interfaces/Box';
 import PartsModel from './Part.model';
 import PlayerModel from './Player.model';
-import { Toyo } from './interfaces/Toyo';
+import { IToyo } from './interfaces/IToyo';
 import { buffer } from 'stream/consumers';
 
 export default class BoxModel implements Box {
   private objectId?: string;
   type: number;
   isOpen: boolean;
-  toyo: Toyo;
+  toyo: IToyo;
   hash: string;
   idOpenBox: string;
   idClosedBox: string;
