@@ -1,10 +1,38 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { AppController } from './controller/app.controller';
+import { AuthMiddleware } from './middlewares/auth.middleware';
+import {
+  EnvironmentService,
+  BoxService,
+  CardService,
+  PartService,
+  PlayerService,
+  ToyoService,
+  ToyoPersonaService,
+  OnchainService,
+} from './service';
 
 @Module({
-  imports: [],
+  imports: [
+    ConfigModule.forRoot({
+      cache: true,
+    }),
+  ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    EnvironmentService,
+    PlayerService,
+    ToyoPersonaService,
+    PartService,
+    OnchainService,
+    CardService,
+    ToyoService,
+    BoxService,
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AuthMiddleware).forRoutes(AppController);
+  }
+}
