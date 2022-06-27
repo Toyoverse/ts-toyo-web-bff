@@ -60,18 +60,51 @@ export class EnvironmentService {
           TypeId.TOYO_JAKANA_SEED_BOX,
         ],
       );
+    /*
+     * [{tokenId: 5}, {tokenId: 7}, {tokenId: 8}] -> essa é a mais confiável
+     *
+     */
 
-    const boxesOffChain = await this.boxService.getBoxesByWalletId(
+    const variasCaixasOffChain = await this.boxService.getBoxesByWalletId(
       walletAddress,
     );
+    /*
+     * [{tokenId: 5}, {tokenId: 9}]
+     *
+     */
 
-    if (boxesOnChain.length !== boxesOffChain.length) {
-      //precisa rodar background job para atualizar dados
-    }
+    // TODO Depois...
+    // if (boxesOnChain.length !== boxesOffChain.length) {
+    //   //precisa rodar background job para atualizar dados
+    // }
 
     //retornar o que é certo
+    //para cada caixa onchain, checar se typeId bate,
 
-    return { wallet: walletAddress, boxes: boxesOnChain.concat(boxesOffChain) };
+    //pesquisar sobre reduce no javascript
+    const boxes = [];
+
+    for (const box of boxesOnChain) {
+      for (const umaCaixaOffChain of variasCaixasOffChain) {
+        if (box.tokenId === umaCaixaOffChain.tokenId) {
+          boxes.push({
+            ...box,
+            isOpen: umaCaixaOffChain.isOpen,
+          });
+        } else {
+          //aqui signifca que a caixa mudou de dono ou comprou nova
+          //precisa preencher com os dados normalmente
+        }
+      }
+    }
+
+    //popular com os dados adicionais offchain, isto é, descrição da caixa, se isOpen, idcaixa aberta, id caixa fechada,
+    //tipo, specications, type, lastUboxingStarted, idToyo caso isOpen
+
+    return {
+      wallet: walletAddress,
+      boxes: boxesOnChain.concat(variasCaixasOffChain),
+    };
   }
 
   /**

@@ -62,6 +62,9 @@ export class AppController {
     @Res() response: Response,
     @Param() params,
   ) {
+    //partes
+    //cartas
+    //etc
     console.log(params.id);
   }
 }
