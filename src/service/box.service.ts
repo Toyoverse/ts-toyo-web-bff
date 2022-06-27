@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import BoxModel from '../models/Box.model'
+import BoxModel from '../models/Box.model';
 import * as Parse from 'parse/node';
 import { response } from 'express';
 import { json } from 'stream/consumers';
@@ -11,21 +11,23 @@ import PartModel from 'src/models/Part.model';
 
 @Injectable()
 export class BoxService {
-  constructor(private configService: ConfigService, 
-    private readonly partService: PartService, 
-    private readonly toyoService: ToyoService) {
+  constructor(
+    private configService: ConfigService,
+    private readonly partService: PartService,
+    private readonly toyoService: ToyoService,
+  ) {
     this.ParseServerConfiguration();
   }
 
-  async findBoxById(id: string): Promise<BoxModel>{
-    const Boxes = Parse.Object.extend("Boxes", BoxModel);
+  async findBoxById(id: string): Promise<BoxModel> {
+    const Boxes = Parse.Object.extend('Boxes', BoxModel);
     const boxesQuery = new Parse.Query(Boxes);
     boxesQuery.equalTo('objectId', id);
-    
-    try{
+
+    try {
       const result = await boxesQuery.find();
-    
-      if (result.length < 1 || result[0].id !== id){
+
+      if (result.length < 1 || result[0].id !== id) {
         response.status(404).json({
           erros: ['Box not found!'],
         });
@@ -34,39 +36,74 @@ export class BoxService {
       const box: BoxModel = await this.BoxMapper(result[0]);
 
       return box;
-    }
-    catch(error){
+    } catch (error) {
       response.status(500).json({
         error: [error.message],
       });
-    } 
-
+    }
   }
 
-  private async BoxMapper(result: Parse.Object<Parse.Attributes>): Promise<BoxModel>{
-    const box: BoxModel = new BoxModel();
+  async getBoxesByWalletId(walletId: string) {
+    try {
+      const Boxes = Parse.Object.extend('Boxes');
+      const Players = Parse.Object.extend('Players');
+      const playerQuery = new Parse.Query(Players);
+      playerQuery.equalTo('walletAddress', walletId);
+      const player = await playerQuery.find();
+      const boxesQuery = new Parse.Query(Boxes);
+      boxesQuery.equalTo('player', player[0]);
 
-    box.id = result.id;
-    box.type = result.get('type');
-    box.isOpen = result.get('isOpen');
-    box.toyo = await this.toyoService.findToyoById(result.get('toyo').id);
-    box.hash = result.get('hash');
-    box.idOpenBox = result.get('idOpenBox');
-    box.idClosedBox = result.get('idClosedBox');
-    box.parts = await this.PartsMapper(await result.relation('parts').query().find());
-    box.createdAt = result.get('createdAt');
-    box.updateAt = result.get('updatedAt');
+      const result: Parse.Object<Parse.Attributes>[] = await boxesQuery.find();
+      const boxesOffChain = [];
 
-    return box;
-  } 
-  private async  PartsMapper(result: Parse.Object<Parse.Attributes>[]): Promise<PartModel[]>{
+      for (const box of result) {
+        boxesOffChain.push(await this.BoxMapper(box));
+      }
+
+      console.log(boxesOffChain);
+
+      return boxesOffChain;
+    } catch (error) {
+      response.status(500).json({
+        error: [error.message],
+      });
+    }
+  }
+
+  private async BoxMapper(
+    result: Parse.Object<Parse.Attributes>,
+  ): Promise<BoxModel> {
+    const boxIsOpen: boolean = result.get('isOpen');
+
+    return {
+      id: result.id,
+      type: result.get('type'),
+      isOpen: result.get('isOpen'),
+      toyo: boxIsOpen
+        ? await this.toyoService.findToyoById(result.get('toyo').id)
+        : undefined,
+      hash: result.get('hash'),
+      idOpenBox: result.get('idOpenBox'),
+      idClosedBox: result.get('idClosedBox'),
+      parts: boxIsOpen
+        ? await this.PartsMapper(await result.relation('parts').query().find())
+        : undefined,
+      createdAt: result.get('createdAt'),
+      updateAt: result.get('updatedAt'),
+      typeId: result.get('typeId'),
+      tokenId: result.get('tokenId'),
+    };
+  }
+  private async PartsMapper(
+    result: Parse.Object<Parse.Attributes>[],
+  ): Promise<PartModel[]> {
     const parts: PartModel[] = [];
 
     for (let index = 0; index < result.length; index++) {
       parts.push(await this.partService.findPartById(result[index].id));
     }
 
-    return parts
+    return parts;
   }
 
   /**
