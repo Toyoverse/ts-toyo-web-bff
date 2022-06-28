@@ -1,6 +1,6 @@
 {
   "name": "ts-toyo-web-bff",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "bff for toyoverse boxes and toyos",
   "author": "",
   "private": true,
@@ -26,6 +26,7 @@
     "@nestjs/config": "^2.1.0",
     "@nestjs/core": "^8.0.0",
     "@nestjs/platform-express": "^8.0.0",
+    "@nestjs/swagger": "^5.2.1",
     "aws-lambda": "^1.0.7",
     "aws-serverless-express": "^3.4.0",
     "graphql": "^16.5.0",
@@ -35,7 +36,8 @@
     "parse": "^3.4.2",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
-    "rxjs": "^7.2.0"
+    "rxjs": "^7.2.0",
+    "swagger-ui-express": "^4.4.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^8.0.0",

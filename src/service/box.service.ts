@@ -83,11 +83,8 @@ export class BoxService {
       hash: result.get('hash'),
       idOpenBox: result.get('idOpenBox'),
       idClosedBox: result.get('idClosedBox'),
-      parts: boxIsOpen
-        ? await this.PartsMapper(await result.relation('parts').query().find())
-        : undefined,
-      //createdAt: result.get('createdAt'),
-      //updateAt: result.get('updatedAt'),
+      createdAt: result.get('createdAt'),
+      updateAt: result.get('updatedAt'),
       typeId: result.get('typeId'),
       tokenId: result.get('tokenId'),
       specification: result.get('specifications'),
