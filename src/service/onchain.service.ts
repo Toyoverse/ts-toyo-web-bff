@@ -10,7 +10,7 @@ export class OnchainService {
   async getTokenOwnerEntityByWalletId(walletId: string): Promise<any> {
     const query = gql`
       {
-        tokenOwnerEntities(where: {currentOwner: "${walletId}"}) {
+        tokenOwnerEntities(first: 100, where: {currentOwner: "${walletId}"}) {
             typeId,
             transactionHash,
             tokenId,
