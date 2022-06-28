@@ -90,7 +90,7 @@ export class EnvironmentService {
             "chanceModifier": "",
             "illustrationModifier": ""
           },
-          lastUnboingStarted: null,
+          lastUnboxingStarted: null,
         });
       }
       else {
