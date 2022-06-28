@@ -115,7 +115,7 @@ export class ToyoService {
   ): Promise<ToyoModel> {
     const toyo: ToyoModel = new ToyoModel();
 
-    toyo.id = result.id;
+    toyo.id = result.get('objectId');
     toyo.name = result.get('name');
     toyo.hasTenParts = result.get('hasTenParts');
     toyo.isToyoSelected = result.get('isToyoSelected');
