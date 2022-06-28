@@ -8,12 +8,15 @@ import { PartService } from './part.service';
 import { OnchainService } from './onchain.service';
 import { TypeId } from 'src/enums/SmartContracts';
 import { IToyo, IToyoPersona } from '../models/interfaces';
+import { ToyoPersonaService } from './toyoPersona.service';
 
 @Injectable()
 export class ToyoService {
+  
   constructor(
     private configService: ConfigService,
     private readonly partService: PartService,
+    private readonly toyoPersonaService: ToyoPersonaService,
     private readonly onchainService: OnchainService,
   ) {
     this.ParseServerConfiguration();
@@ -109,6 +112,15 @@ export class ToyoService {
     }
     return toyos;
   }
+  async getToyoById(id: string): Promise<ToyoModel> {
+
+    const toyoId: string = Buffer.from(id, 'base64').toString('ascii');
+
+    const toyo: ToyoModel = await this.findToyoById(toyoId);
+    toyo.parts = await this.partsMapper(toyoId);
+
+    return toyo;
+  }
 
   private async ToyoMapper(
     result: Parse.Object<Parse.Attributes>,
@@ -123,8 +135,10 @@ export class ToyoService {
     toyo.updateAt = result.get('updatedAt');
     toyo.tokenId = result.get('tokenId');
     toyo.transactionHash = result.get('transactionHash');
-
-    const personaOrigin: IToyoPersona = result
+    toyo.toyoPersonaOrigin = await this.toyoPersonaService.findToyoPersonaById(
+      result.get('toyoPersonaOrigin').id,
+    );
+    /*const personaOrigin: IToyoPersona = result
       .get('toyoPersonaOrigin')
       .toJSON();
 
@@ -138,10 +152,33 @@ export class ToyoService {
         description: personaOrigin.description,
         rarity: personaOrigin.rarity,
       };
-    }
+    }*/
+    
 
     return toyo;
   }
+  private async partsMapper(toyoId: string): Promise<PartModel[]>{
+    const Toyo = Parse.Object.extend('Toyo');
+    const toyoQuery = new Parse.Query(Toyo);
+    toyoQuery.equalTo('objectId', toyoId);
+
+    try {
+      const result = await toyoQuery.find();
+      console
+      .log(result[0].get('parts'));
+      const resultId = await result[0].relation('parts').query().find();
+      const parts: PartModel[] = [];
+
+    for (let index = 0; index < resultId.length; index++) {
+      parts.push(await this.partService.findPartById(resultId[index].id));
+    }
+      return parts;
+  } catch (e){
+      response.status(500).json({
+      error: [e.message],
+    });
+  }
+}
 
   /**
    * Function to configure ParseSDK

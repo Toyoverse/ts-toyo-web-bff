@@ -23,7 +23,7 @@ export default class ToyoModel implements IToyo {
   @ApiProperty()
   transactionHash: string;
   @ApiProperty()
-  toyoPersona?: ToyoPersonaModel;
+  toyoPersonaOrigin?: ToyoPersonaModel;
 
   constructor() {}
 
