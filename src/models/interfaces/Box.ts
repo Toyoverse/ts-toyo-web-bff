@@ -11,7 +11,6 @@ export interface Box {
   idOpenBox: string;
   idClosedBox: string;
   player?: Player;
-  parts: Parts[];
   createdAt?: Date;
   updateAt?: Date;
   typeId: string;

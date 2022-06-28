@@ -1,17 +1,29 @@
 import PartsModel from './Part.model';
 import { IToyoPersona, IToyo } from './interfaces';
+import { ApiProperty } from '@nestjs/swagger';
+import ToyoPersonaModel from './ToyoPersona.model';
 
 export default class ToyoModel implements IToyo {
+  @ApiProperty()
   private objectId: string;
+  @ApiProperty()
   name: string;
-  parts: PartsModel[];
+  @ApiProperty()
+  parts?: PartsModel[];
+  @ApiProperty()
   hasTenParts: boolean;
+  @ApiProperty()
   isToyoSelected: boolean;
+  @ApiProperty()
   createdAt: Date;
+  @ApiProperty()
   updateAt: Date;
+  @ApiProperty()
   tokenId: string;
+  @ApiProperty()
   transactionHash: string;
-  toyoPersona?: IToyoPersona;
+  @ApiProperty()
+  toyoPersona?: ToyoPersonaModel;
 
   constructor() {}
 

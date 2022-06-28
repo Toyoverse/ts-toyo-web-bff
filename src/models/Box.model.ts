@@ -3,22 +3,35 @@ import PartsModel from './Part.model';
 import PlayerModel from './Player.model';
 import { IToyo } from './interfaces/IToyo';
 import { buffer } from 'stream/consumers';
+import { ApiProperty } from '@nestjs/swagger';
 
 export default class BoxModel implements Box {
   private objectId?: string;
+  @ApiProperty()
   type: number;
+  @ApiProperty()
   isOpen: boolean;
+  @ApiProperty()
   toyo: IToyo;
+  @ApiProperty()
   hash: string;
+  @ApiProperty()
   idOpenBox: string;
+  @ApiProperty()
   idClosedBox: string;
+  @ApiProperty()
   player?: PlayerModel;
-  parts: PartsModel[];
+  @ApiProperty()
   createdAt?: Date;
+  @ApiProperty()
   updateAt?: Date;
+  @ApiProperty()
   tokenId: string;
+  @ApiProperty()
   typeId: string;
+  @ApiProperty()
   specification?: string[];
+  @ApiProperty()
   lastUnboxingStartedAt?: Date;
 
   constructor() {}
