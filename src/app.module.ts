@@ -11,6 +11,7 @@ import {
   ToyoService,
   ToyoPersonaService,
   OnchainService,
+  ToyoRegionService,
 } from './service';
 
 @Module({
@@ -29,6 +30,7 @@ import {
     CardService,
     ToyoService,
     BoxService,
+    ToyoRegionService,
   ],
 })
 export class AppModule implements NestModule {

@@ -35,8 +35,9 @@ export class ToyoService {
           erros: ['Card not found!'],
         });
       }
-
+      
       const toyo: ToyoModel = await this.ToyoMapper(result[0]);
+      
 
       return toyo;
     } catch (error) {
@@ -136,8 +137,9 @@ export class ToyoService {
     toyo.tokenId = result.get('tokenId');
     toyo.transactionHash = result.get('transactionHash');
     toyo.toyoPersonaOrigin = await this.toyoPersonaService.findToyoPersonaById(
-      result.get('toyoPersonaOrigin').id,
+      result.get('toyoPersonaOrigin').id
     );
+    
     /*const personaOrigin: IToyoPersona = result
       .get('toyoPersonaOrigin')
       .toJSON();
@@ -164,8 +166,6 @@ export class ToyoService {
 
     try {
       const result = await toyoQuery.find();
-      console
-      .log(result[0].get('parts'));
       const resultId = await result[0].relation('parts').query().find();
       const parts: PartModel[] = [];
 
