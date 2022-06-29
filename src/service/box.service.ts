@@ -8,6 +8,9 @@ import { PartService } from './part.service';
 import { ToyoService } from './toyo.service';
 import { PlayerService } from './player.service';
 import PartModel from 'src/models/Part.model';
+import { ToyoRegionService } from './toyoRegion.service';
+import ToyoRegionModel from 'src/models/ToyoRegion.model';
+import { TypeId } from 'src/enums/SmartContracts';
 
 @Injectable()
 export class BoxService {
@@ -15,6 +18,7 @@ export class BoxService {
     private configService: ConfigService,
     private readonly partService: PartService,
     private readonly toyoService: ToyoService,
+    private readonly toyoRegionService: ToyoRegionService,
   ) {
     this.ParseServerConfiguration();
   }
@@ -50,14 +54,13 @@ export class BoxService {
       const playerQuery = new Parse.Query(Players);
       playerQuery.equalTo('walletAddress', walletId);
       const player = await playerQuery.find();
-      const boxesQuery = new Parse.Query(Boxes);
-      boxesQuery.equalTo('player', player[0]);
+      
+      const result = await player[0].relation('boxes').query().find();
+      
+      const boxesOffChain: BoxModel[] = [];
 
-      const result: Parse.Object<Parse.Attributes>[] = await boxesQuery.find();
-      const boxesOffChain = [];
-
-      for (const box of result) {
-        boxesOffChain.push(await this.BoxMapper(box));
+      for (let index = 0; index < result.length; index++) {
+        boxesOffChain.push(await this.findBoxById(result[index].id));
       }
 
       return boxesOffChain;
@@ -72,6 +75,8 @@ export class BoxService {
     result: Parse.Object<Parse.Attributes>,
   ): Promise<BoxModel> {
     const boxIsOpen: boolean = result.get('isOpen');
+    const toyoRegion = result.get('region');
+    const typeId = result.get('typeId');
 
     return {
       id: result.id,
@@ -85,11 +90,36 @@ export class BoxService {
       idClosedBox: result.get('idClosedBox'),
       createdAt: result.get('createdAt'),
       updateAt: result.get('updatedAt'),
-      typeId: result.get('typeId'),
+      typeId: typeId,
       tokenId: result.get('tokenId'),
-      specification: result.get('specifications'),
       lastUnboxingStartedAt: result.get('lastUnboxingStartedAt'),
+      modifiers: result.get('modifiers'),
+      region: toyoRegion
+        ? await this.toyoRegionService.findRegionById(toyoRegion.id)
+        : this.getRegion(typeId),
+      
     };
+    
+  }
+  private getRegion(type): ToyoRegionModel{
+    let region: ToyoRegionModel = new ToyoRegionModel();
+    if (type == TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX || 
+      type == TypeId.OPEN_JAKANA_SEED_BOX ||
+      type == TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX ||
+      type == TypeId.TOYO_JAKANA_SEED_BOX){
+        
+        region.name = 'JAKANA';
+         
+      }else if (type == TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX ||
+        type == TypeId.OPEN_KYTUNT_SEED_BOX ||
+        type == TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX ||
+        type== TypeId.TOYO_KYTUNT_SEED_BOX){
+
+          region.name = 'KYTUNT';
+      }
+
+      return region;
+    
   }
   private async PartsMapper(
     result: Parse.Object<Parse.Attributes>[],

@@ -7,6 +7,7 @@ import { PlayerService } from './player.service';
 import { OnchainService } from './onchain.service';
 import { TypeId } from 'src/enums/SmartContracts';
 import { BoxService } from './box.service';
+import { json } from 'stream/consumers';
 
 @Injectable()
 export class EnvironmentService {
@@ -69,7 +70,7 @@ export class EnvironmentService {
     // if (boxesOnChain.length !== boxesOffChain.length) {
     //   //precisa rodar background job para atualizar dados
     // }
-
+  
     const boxes = []
 
     for (const box of boxesOnChain){
@@ -81,16 +82,10 @@ export class EnvironmentService {
           isOpen: this.isOpen(box.typeId), 
           idOpenBox: null,
           idClosedBox: null,
-          specification: {
-            "name": "",
-            "priority": "",
-            "size": "regular",
-            "cost": "",
-            "set": "",
-            "chanceModifier": "",
-            "illustrationModifier": ""
-          },
           lastUnboxingStarted: null,
+          modifiers: this.getModifiers(box.typeId),
+          type: this.getType(box.typeId),
+          region: this.getRegion(box.typeId)
         });
       }
       else {
@@ -116,6 +111,116 @@ export class EnvironmentService {
             box == TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX ||
             box == TypeId.OPEN_JAKANA_SEED_BOX ||
             box == TypeId.OPEN_KYTUNT_SEED_BOX;
+  }
+  private getType(type) :string{
+    if (type == TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX || 
+      type == TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX ||
+      type == TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX ||
+      type == TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX){
+        return 'FORTIFIED';
+    }else if (type == TypeId.OPEN_JAKANA_SEED_BOX ||
+              type == TypeId.OPEN_KYTUNT_SEED_BOX ||
+              type == TypeId.TOYO_JAKANA_SEED_BOX ||
+              type== TypeId.TOYO_KYTUNT_SEED_BOX){
+      return 'SIMPLE';        
+    }
+    return undefined;
+  }
+
+  private getModifiers(type){
+    const key: number = parseInt(type, 10);
+    switch (key) {
+      case TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX && TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX:
+        return [{
+          name: "Fortified",
+          type: "1",
+          description: "Increases minimum rarity to be 3 or higher.",
+          modification: "1"
+        },
+        {
+          name: "Jakana",
+          type: "4",
+          description: "Contain only Classic Jakana Toyoparts.",
+          modification: {
+            "theme": "Classic",
+            "region": "Jakana"
+          }
+        }]
+        break;
+      case TypeId.TOYO_JAKANA_SEED_BOX && TypeId.OPEN_JAKANA_SEED_BOX:
+        return [
+          {
+            "name": "Jakana",
+            "type": "4",
+            "description": "Contain only Classic Jakana Toyoparts.",
+            "modification": {
+              "theme": "Classic",
+              "region": "Jakana"
+            }
+          }
+        ]
+        break;
+      case TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX && TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX:
+        return[
+          {
+            "name": "Fortified",
+            "type": "1",
+            "description": "Increases minimum rarity to be 3 or higher.",
+            "modification": "1"
+          },
+          {
+            "name": "Kytunt",
+            "type": "4",
+            "description": "Contain only Classic Kytunt Toyoparts.",
+            "restrictions": "Available only until 2022-12-31",
+            "modification": {
+              "theme": "Classic",
+              "region": "Kytunt"
+            }
+          }
+        ]
+        break;
+      case TypeId.TOYO_KYTUNT_SEED_BOX && TypeId.OPEN_KYTUNT_SEED_BOX:
+        return[
+          {
+            "name": "Kytunt",
+            "type": "4",
+            "description": "Contain only Classic Kytunt Toyoparts.",
+            "restrictions": "Available only until 2022-12-31",
+            "modification": {
+              "theme": "Classic",
+              "region": "Kytunt"
+            }
+          }
+        ]
+        break;
+      default:
+        return undefined;
+        break;
+    }
+  }
+  private getRegion(type){
+    if (type == TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX || 
+      type == TypeId.OPEN_JAKANA_SEED_BOX ||
+      type == TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX ||
+      type == TypeId.TOYO_JAKANA_SEED_BOX){
+        return {
+          "name": "JAKANA",
+          "createdAt": undefined,
+          "updatedAt": undefined
+      };
+    }else if (type == TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX ||
+              type == TypeId.OPEN_KYTUNT_SEED_BOX ||
+              type == TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX ||
+              type== TypeId.TOYO_KYTUNT_SEED_BOX){
+      return {
+        "name": "KYTUNT",
+        "createdAt": undefined,
+        "updatedAt": undefined
+      }        
+    }
+    
+    return undefined;
   }
 
   /**

@@ -7,3 +7,4 @@ export * from './part.service';
 export * from './player.service';
 export * from './toyo.service';
 export * from './toyoPersona.service';
+export * from './toyoRegion.service';

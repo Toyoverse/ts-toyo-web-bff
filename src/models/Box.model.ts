@@ -4,11 +4,12 @@ import PlayerModel from './Player.model';
 import { IToyo } from './interfaces/IToyo';
 import { buffer } from 'stream/consumers';
 import { ApiProperty } from '@nestjs/swagger';
+import ToyoRegion from './ToyoRegion.model';
 
 export default class BoxModel implements Box {
   private objectId?: string;
   @ApiProperty()
-  type: number;
+  type: string;
   @ApiProperty()
   isOpen: boolean;
   @ApiProperty()
@@ -30,9 +31,11 @@ export default class BoxModel implements Box {
   @ApiProperty()
   typeId: string;
   @ApiProperty()
-  specification?: string[];
-  @ApiProperty()
   lastUnboxingStartedAt?: Date;
+  @ApiProperty()
+  region: ToyoRegion;
+  @ApiProperty()
+  modifiers: object;
 
   constructor() {}
 

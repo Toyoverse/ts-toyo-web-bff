@@ -35,8 +35,9 @@ export class ToyoService {
           erros: ['Card not found!'],
         });
       }
-
+      
       const toyo: ToyoModel = await this.ToyoMapper(result[0]);
+      
 
       return toyo;
     } catch (error) {
@@ -135,25 +136,10 @@ export class ToyoService {
     toyo.updateAt = result.get('updatedAt');
     toyo.tokenId = result.get('tokenId');
     toyo.transactionHash = result.get('transactionHash');
-    toyo.toyoPersonaOrigin = await this.toyoPersonaService.findToyoPersonaById(
-      result.get('toyoPersonaOrigin').id,
-    );
-    /*const personaOrigin: IToyoPersona = result
-      .get('toyoPersonaOrigin')
-      .toJSON();
-
-    if (personaOrigin) {
-      toyo.toyoPersona = {
-        name: personaOrigin.name,
-        region: personaOrigin.region,
-        video: personaOrigin.video,
-        thumbnail: personaOrigin.thumbnail,
-        bodyType: personaOrigin.bodyType,
-        description: personaOrigin.description,
-        rarity: personaOrigin.rarity,
-      };
-    }*/
-    
+    const toyoPersona = result.get('toyoPersonaOrigin');
+    toyo.toyoPersonaOrigin = toyoPersona
+      ? await this.toyoPersonaService.findToyoPersonaById(toyoPersona.id)
+      : undefined;
 
     return toyo;
   }
@@ -164,14 +150,12 @@ export class ToyoService {
 
     try {
       const result = await toyoQuery.find();
-      console
-      .log(result[0].get('parts'));
       const resultId = await result[0].relation('parts').query().find();
       const parts: PartModel[] = [];
-
-    for (let index = 0; index < resultId.length; index++) {
-      parts.push(await this.partService.findPartById(resultId[index].id));
-    }
+      
+      for (const box of resultId ){
+        parts.push( await this.partService.findPartById(box.id));
+      }
       return parts;
   } catch (e){
       response.status(500).json({
