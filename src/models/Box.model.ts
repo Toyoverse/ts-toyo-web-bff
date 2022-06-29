@@ -13,7 +13,7 @@ export default class BoxModel implements Box {
   @ApiProperty()
   isOpen: boolean;
   @ApiProperty()
-  toyo: IToyo | undefined;
+  toyo: IToyo;
   @ApiProperty()
   hash: string;
   @ApiProperty()

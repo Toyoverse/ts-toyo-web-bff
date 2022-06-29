@@ -7,7 +7,7 @@ export interface Box {
   id: string;
   type: string;
   isOpen: boolean;
-  toyo: IToyo | undefined;
+  toyo: IToyo;
   hash: string;
   idOpenBox: string;
   idClosedBox: string;

@@ -136,26 +136,10 @@ export class ToyoService {
     toyo.updateAt = result.get('updatedAt');
     toyo.tokenId = result.get('tokenId');
     toyo.transactionHash = result.get('transactionHash');
-    toyo.toyoPersonaOrigin = await this.toyoPersonaService.findToyoPersonaById(
-      result.get('toyoPersonaOrigin').id
-    );
-    
-    /*const personaOrigin: IToyoPersona = result
-      .get('toyoPersonaOrigin')
-      .toJSON();
-
-    if (personaOrigin) {
-      toyo.toyoPersona = {
-        name: personaOrigin.name,
-        region: personaOrigin.region,
-        video: personaOrigin.video,
-        thumbnail: personaOrigin.thumbnail,
-        bodyType: personaOrigin.bodyType,
-        description: personaOrigin.description,
-        rarity: personaOrigin.rarity,
-      };
-    }*/
-    
+    const toyoPersona = result.get('toyoPersonaOrigin');
+    toyo.toyoPersonaOrigin = toyoPersona
+      ? await this.toyoPersonaService.findToyoPersonaById(toyoPersona.id)
+      : undefined;
 
     return toyo;
   }
