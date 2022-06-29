@@ -152,10 +152,10 @@ export class ToyoService {
       const result = await toyoQuery.find();
       const resultId = await result[0].relation('parts').query().find();
       const parts: PartModel[] = [];
-
-    for (let index = 0; index < resultId.length; index++) {
-      parts.push(await this.partService.findPartById(resultId[index].id));
-    }
+      
+      for (const box of resultId ){
+        parts.push( await this.partService.findPartById(box.id));
+      }
       return parts;
   } catch (e){
       response.status(500).json({
