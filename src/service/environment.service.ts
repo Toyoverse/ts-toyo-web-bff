@@ -85,7 +85,7 @@ export class EnvironmentService {
           lastUnboxingStarted: null,
           modifiers: this.getModifiers(box.typeId),
           type: this.getType(box.typeId),
-          region: this.getRegion(box.typeId)
+          region: this.getRegion(box.typeId).name
         });
       }
       else {
