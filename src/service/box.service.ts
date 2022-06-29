@@ -55,7 +55,13 @@ export class BoxService {
       playerQuery.equalTo('walletAddress', walletId);
       const player = await playerQuery.find();
       
-      const result = await player[0].relation('boxes').query().find();
+      const result = await player[0]
+        .relation('boxes')
+        .query()
+        .include('region')
+        .include('toyo')
+        .include('toyo.toyoPersonaOrigin')
+        .find();
       
       const boxesOffChain: BoxModel[] = [];
 
