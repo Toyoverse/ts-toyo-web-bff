@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Req, Res } from '@nestjs/common';
 import { EnvironmentService, ToyoService } from '../service';
-import { Request, Response} from 'express';
+import { Request, Response } from 'express';
 import ToyoModel from 'src/models/Toyo.model';
 import { ApiHeader, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import BoxModel from 'src/models/Box.model';
@@ -30,7 +30,7 @@ export class AppController {
 
       if (boxes.wallet === request.walletId) {
         response.status(200).json({
-          boxes,
+          player: boxes,
         });
       } else {
         return response.status(500).json({
@@ -67,27 +67,25 @@ export class AppController {
   }
 
   @ApiTags('toyos')
-  @ApiParam({ name: 'id', description: 'Toyo Id to get details'})
+  @ApiParam({ name: 'id', description: 'Toyo Id to get details' })
   @Get('/toyo/:id')
-  @ApiResponse({status: 200, type: ToyoModel })
+  @ApiResponse({ status: 200, type: ToyoModel })
   async getToyoDetail(
     @Req() request: Request,
     @Res() response: Response,
-    @Param('id') id: string
+    @Param('id') id: string,
   ) {
     try {
       const toyo: ToyoModel = await this.toyoService.getToyoById(id);
 
       return response.status(200).json({
         toyo: toyo,
-      })
-
+      });
     } catch (e) {
       console.log(e);
       return response.status(500).json({
         erros: ['Error could not return toyo'],
-      })
-
+      });
     }
   }
 }
