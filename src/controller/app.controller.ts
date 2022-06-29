@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Req, Res } from '@nestjs/common';
 import { EnvironmentService, ToyoService } from '../service';
-import { Request, Response } from 'express';
+import { Request, Response} from 'express';
 import ToyoModel from 'src/models/Toyo.model';
 import { ApiHeader, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import BoxModel from 'src/models/Box.model';
@@ -24,13 +24,13 @@ export class AppController {
   })
   async getPlayerBoxes(@Req() request: Request, @Res() response: Response) {
     try {
-      const player = await this.EnvironmentService.findBoxesByWalletId(
+      const boxes = await this.EnvironmentService.findBoxesByWalletId(
         request.walletId,
       );
 
-      if (player.wallet === request.walletId) {
+      if (boxes.wallet === request.walletId) {
         response.status(200).json({
-          player,
+          boxes,
         });
       } else {
         return response.status(500).json({
@@ -39,7 +39,7 @@ export class AppController {
       }
     } catch {
       return response.status(500).json({
-        errors: ['Error could not return player'],
+        errors: ['Error could not return box'],
       });
     }
   }
@@ -61,25 +61,33 @@ export class AppController {
     } catch (e) {
       console.log(e);
       return response.status(500).json({
-        errors: ['Error could not return boxes'],
+        errors: ['Error could not return toyos'],
       });
     }
   }
 
   @ApiTags('toyos')
-  @ApiParam({
-    name: 'id',
-    description: 'Toyo Id to get details',
-  })
+  @ApiParam({ name: 'id', description: 'Toyo Id to get details'})
   @Get('/toyo/:id')
+  @ApiResponse({status: 200, type: ToyoModel })
   async getToyoDetail(
     @Req() request: Request,
     @Res() response: Response,
-    @Param('id') id,
+    @Param('id') id: string
   ) {
-    //partes
-    //cartas
-    //etc
-    console.log(id);
+    try {
+      const toyo: ToyoModel = await this.toyoService.getToyoById(id);
+
+      return response.status(200).json({
+        toyo: toyo,
+      })
+
+    } catch (e) {
+      console.log(e);
+      return response.status(500).json({
+        erros: ['Error could not return toyo'],
+      })
+
+    }
   }
 }
