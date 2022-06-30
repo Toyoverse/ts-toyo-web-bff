@@ -123,7 +123,7 @@ export class ToyoService {
     return toyo;
   }
 
-  private async ToyoMapper(
+  async ToyoMapper(
     result: Parse.Object<Parse.Attributes>,
   ): Promise<ToyoModel> {
     const toyo: ToyoModel = new ToyoModel();

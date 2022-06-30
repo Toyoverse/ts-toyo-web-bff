@@ -3,8 +3,8 @@ import { IToyoRegion } from "./interfaces/IToyoRegion";
 export default class ToyoRegionModel implements IToyoRegion{
     objectId: string;
     name: string;
-    createdAt: Date;
-    updatedAt: Date;
+    createdAt?: Date;
+    updatedAt?: Date;
     
     constructor () {}
     get id(){

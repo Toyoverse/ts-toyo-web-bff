@@ -18,7 +18,6 @@ export class BoxService {
     private configService: ConfigService,
     private readonly partService: PartService,
     private readonly toyoService: ToyoService,
-    private readonly toyoRegionService: ToyoRegionService,
   ) {
     this.ParseServerConfiguration();
   }
@@ -49,18 +48,22 @@ export class BoxService {
 
   async getBoxesByWalletId(walletId: string) {
     try {
-      const Boxes = Parse.Object.extend('Boxes');
       const Players = Parse.Object.extend('Players');
       const playerQuery = new Parse.Query(Players);
       playerQuery.equalTo('walletAddress', walletId);
       const player = await playerQuery.find();
       
-      const result = await player[0].relation('boxes').query().find();
+      const result = await player[0]
+        .relation('boxes')
+        .query()
+        .include('region')
+        .include('toyo')
+        .include('toyo.toyoPersonaOrigin')
+        .find();
       
-      const boxesOffChain: BoxModel[] = [];
-
-      for (let index = 0; index < result.length; index++) {
-        boxesOffChain.push(await this.findBoxById(result[index].id));
+     const boxesOffChain: BoxModel[] = [];
+      for (const boxOff of result){
+        boxesOffChain.push(await this.BoxMapper(boxOff));
       }
 
       return boxesOffChain;
@@ -77,13 +80,17 @@ export class BoxService {
     const boxIsOpen: boolean = result.get('isOpen');
     const toyoRegion = result.get('region');
     const typeId = result.get('typeId');
+    const modifiers = result.get('modifiers');
+    const type = result.get('type');
 
     return {
       id: result.id,
-      type: result.get('type'),
-      isOpen: result.get('isOpen'),
+      type: type
+        ? type
+        : this.getType(typeId),
+      isOpen: boxIsOpen,
       toyo: boxIsOpen
-        ? await this.toyoService.findToyoById(result.get('toyo').id)
+        ? await this.toyoService.ToyoMapper(result.get('toyo'))
         : undefined,
       hash: result.get('hash'),
       idOpenBox: result.get('idOpenBox'),
@@ -93,34 +100,119 @@ export class BoxService {
       typeId: typeId,
       tokenId: result.get('tokenId'),
       lastUnboxingStartedAt: result.get('lastUnboxingStartedAt'),
-      modifiers: result.get('modifiers'),
+      modifiers: modifiers
+        ? modifiers
+        : this.getModifiers(typeId),
       region: toyoRegion
-        ? await this.toyoRegionService.findRegionById(toyoRegion.id)
+        ? await toyoRegion.get('name')
         : this.getRegion(typeId),
       
     };
     
   }
-  private getRegion(type): ToyoRegionModel{
-    let region: ToyoRegionModel = new ToyoRegionModel();
+  getRegion(type): string{
     if (type == TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX || 
       type == TypeId.OPEN_JAKANA_SEED_BOX ||
       type == TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX ||
       type == TypeId.TOYO_JAKANA_SEED_BOX){
         
-        region.name = 'JAKANA';
+        return 'JAKANA';
          
       }else if (type == TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX ||
         type == TypeId.OPEN_KYTUNT_SEED_BOX ||
         type == TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX ||
         type== TypeId.TOYO_KYTUNT_SEED_BOX){
 
-          region.name = 'KYTUNT';
+          return 'KYTUNT';
       }
-
-      return region;
-    
   }
+  getModifiers(type){
+    const key: number = parseInt(type, 10);
+    switch (key) {
+      case TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX && TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX:
+        return [{
+          name: "Fortified",
+          type: "1",
+          description: "Increases minimum rarity to be 3 or higher.",
+          modification: "1"
+        },
+        {
+          name: "Jakana",
+          type: "4",
+          description: "Contain only Classic Jakana Toyoparts.",
+          modification: {
+            "theme": "Classic",
+            "region": "Jakana"
+          }
+        }]
+        break;
+      case TypeId.TOYO_JAKANA_SEED_BOX && TypeId.OPEN_JAKANA_SEED_BOX:
+        return [
+          {
+            "name": "Jakana",
+            "type": "4",
+            "description": "Contain only Classic Jakana Toyoparts.",
+            "modification": {
+              "theme": "Classic",
+              "region": "Jakana"
+            }
+          }
+        ]
+        break;
+      case TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX && TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX:
+        return[
+          {
+            "name": "Fortified",
+            "type": "1",
+            "description": "Increases minimum rarity to be 3 or higher.",
+            "modification": "1"
+          },
+          {
+            "name": "Kytunt",
+            "type": "4",
+            "description": "Contain only Classic Kytunt Toyoparts.",
+            "restrictions": "Available only until 2022-12-31",
+            "modification": {
+              "theme": "Classic",
+              "region": "Kytunt"
+            }
+          }
+        ]
+        break;
+      case TypeId.TOYO_KYTUNT_SEED_BOX && TypeId.OPEN_KYTUNT_SEED_BOX:
+        return[
+          {
+            "name": "Kytunt",
+            "type": "4",
+            "description": "Contain only Classic Kytunt Toyoparts.",
+            "restrictions": "Available only until 2022-12-31",
+            "modification": {
+              "theme": "Classic",
+              "region": "Kytunt"
+            }
+          }
+        ]
+        break;
+      default:
+        return undefined;
+        break;
+    }
+  }
+  getType(type) :string{
+    if (type == TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX || 
+      type == TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX ||
+      type == TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX ||
+      type == TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX){
+        return 'FORTIFIED';
+    }else if (type == TypeId.OPEN_JAKANA_SEED_BOX ||
+              type == TypeId.OPEN_KYTUNT_SEED_BOX ||
+              type == TypeId.TOYO_JAKANA_SEED_BOX ||
+              type== TypeId.TOYO_KYTUNT_SEED_BOX){
+      return 'SIMPLE';        
+    }
+    return undefined;
+  }
+
   private async PartsMapper(
     result: Parse.Object<Parse.Attributes>[],
   ): Promise<PartModel[]> {
