@@ -77,7 +77,31 @@ export class BoxService {
   private async BoxMapper(
     result: Parse.Object<Parse.Attributes>,
   ): Promise<BoxModel> {
-    const boxIsOpen: boolean = result.get('isOpen');
+    const box:BoxModel = new BoxModel(); 
+    box.id= result.id;
+    box.typeId= result.get('typeId');
+    box.type= result.get('type')
+        ? result.get('type')
+        : this.getType(box.typeId);
+  box.region= result.get('region')
+        ? await result.get('region').get('name')
+        : this.getRegion(box.typeId);
+    box.isOpen = result.get('region');
+    box.toyo = box.isOpen
+        ? await this.toyoService.ToyoMapper(result.get('toyo'))
+        : undefined;
+    box.hash= result.get('hash');
+    box.idOpenBox = result.get('idOpenBox');
+    box.idClosedBox= result.get('idClosedBox');
+    box.tokenId= result.get('tokenId');
+    box.lastUnboxingStartedAt = result.get('lastUnboxingStartedAt');
+    box.modifiers= result.get('modifiers')
+        ? result.get('modifiers')
+        : this.getModifiers(box.typeId);
+    box.createdAt= result.get('createdAt');
+    box.updateAt= result.get('updatedAt');
+      
+    /*const boxIsOpen: boolean = result.get('isOpen');
     const toyoRegion = result.get('region');
     const typeId = result.get('typeId');
     const modifiers = result.get('modifiers');
@@ -107,7 +131,8 @@ export class BoxService {
         ? await toyoRegion.get('name')
         : this.getRegion(typeId),
       
-    };
+    };*/
+    return box;
     
   }
   getRegion(type): string{
