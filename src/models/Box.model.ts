@@ -33,7 +33,7 @@ export default class BoxModel implements Box {
   @ApiProperty()
   lastUnboxingStartedAt?: Date;
   @ApiProperty()
-  region: ToyoRegion;
+  region: ToyoRegion | string;
   @ApiProperty()
   modifiers: object;
 

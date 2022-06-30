@@ -11,7 +11,7 @@ export class ToyoRegionService{
     }
 
     async findRegionById(id: string): Promise<ToyoRegion>{
-      const region: ToyoRegion = new ToyoRegion();
+      
         const toyoRegion = Parse.Object.extend('ToyoRegion', ToyoRegion);
         const toyoRegionQuery = new Parse.Query(toyoRegion);
         toyoRegionQuery.equalTo('objectId', id);
@@ -23,8 +23,7 @@ export class ToyoRegionService{
                 erros: ['Toyo persona not found!'],
               });
             }
-
-            region.name = result[0].get('name');
+            const region: ToyoRegion = result[0].get('name');
 
             return region;
         } catch (error) {

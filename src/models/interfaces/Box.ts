@@ -16,7 +16,7 @@ export interface Box {
   updateAt?: Date;
   typeId: string;
   tokenId: string;
-  region: IToyoRegion;
+  region: IToyoRegion | string;
   modifiers: object;
 
 }

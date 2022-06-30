@@ -107,25 +107,21 @@ export class BoxService {
     };
     
   }
-  getRegion(type): ToyoRegionModel{
-    let region: ToyoRegionModel = new ToyoRegionModel();
+  getRegion(type): string{
     if (type == TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX || 
       type == TypeId.OPEN_JAKANA_SEED_BOX ||
       type == TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX ||
       type == TypeId.TOYO_JAKANA_SEED_BOX){
         
-        region.name = 'JAKANA';
+        return 'JAKANA';
          
       }else if (type == TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX ||
         type == TypeId.OPEN_KYTUNT_SEED_BOX ||
         type == TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX ||
         type== TypeId.TOYO_KYTUNT_SEED_BOX){
 
-          region.name = 'KYTUNT';
+          return 'KYTUNT';
       }
-
-      return region;
-    
   }
   private async PartsMapper(
     result: Parse.Object<Parse.Attributes>[],
