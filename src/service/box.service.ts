@@ -6,10 +6,7 @@ import { response } from 'express';
 import { json } from 'stream/consumers';
 import { PartService } from './part.service';
 import { ToyoService } from './toyo.service';
-import { PlayerService } from './player.service';
 import PartModel from 'src/models/Part.model';
-import { ToyoRegionService } from './toyoRegion.service';
-import ToyoRegionModel from 'src/models/ToyoRegion.model';
 import { TypeId } from 'src/enums/SmartContracts';
 
 @Injectable()

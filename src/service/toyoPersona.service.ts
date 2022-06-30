@@ -33,7 +33,7 @@ export class ToyoPersonaService {
     }
   }
 
-  private ToyoPersonaMapper(
+  ToyoPersonaMapper(
     result: Parse.Object<Parse.Attributes>,
   ): ToyoPersona {
     const toyoPersona: ToyoPersona = new ToyoPersona();
