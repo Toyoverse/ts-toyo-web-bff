@@ -101,37 +101,6 @@ export class BoxService {
     box.createdAt= result.get('createdAt');
     box.updateAt= result.get('updatedAt');
       
-    /*const boxIsOpen: boolean = result.get('isOpen');
-    const toyoRegion = result.get('region');
-    const typeId = result.get('typeId');
-    const modifiers = result.get('modifiers');
-    const type = result.get('type');
-
-    return {
-      id: result.id,
-      type: type
-        ? type
-        : this.getType(typeId),
-      isOpen: boxIsOpen,
-      toyo: boxIsOpen
-        ? await this.toyoService.ToyoMapper(result.get('toyo'))
-        : undefined,
-      hash: result.get('hash'),
-      idOpenBox: result.get('idOpenBox'),
-      idClosedBox: result.get('idClosedBox'),
-      createdAt: result.get('createdAt'),
-      updateAt: result.get('updatedAt'),
-      typeId: typeId,
-      tokenId: result.get('tokenId'),
-      lastUnboxingStartedAt: result.get('lastUnboxingStartedAt'),
-      modifiers: modifiers
-        ? modifiers
-        : this.getModifiers(typeId),
-      region: toyoRegion
-        ? await toyoRegion.get('name')
-        : this.getRegion(typeId),
-      
-    };*/
     return box;
     
   }

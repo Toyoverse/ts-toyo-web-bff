@@ -136,11 +136,10 @@ export class ToyoService {
     toyo.updateAt = result.get('updatedAt');
     toyo.tokenId = result.get('tokenId');
     toyo.transactionHash = result.get('transactionHash');
-    const toyoPersona = result.get('toyoPersonaOrigin');
-    toyo.toyoPersonaOrigin = toyoPersona
-      ? await this.toyoPersonaService.findToyoPersonaById(toyoPersona.id)
+    toyo.toyoPersonaOrigin = result.get('toyoPersonaOrigin')
+      ? await this.toyoPersonaService.findToyoPersonaById(result.get('toyoPersonaOrigin').id)
       : undefined;
-
+    
     return toyo;
   }
   private async partsMapper(toyoId: string): Promise<PartModel[]>{
