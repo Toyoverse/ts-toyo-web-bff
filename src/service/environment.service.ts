@@ -83,8 +83,8 @@ export class EnvironmentService {
           idOpenBox: null,
           idClosedBox: null,
           lastUnboxingStarted: null,
-          modifiers: this.getModifiers(box.typeId),
-          type: this.getType(box.typeId),
+          modifiers: this.boxService.getModifiers(box.typeId),
+          type: this.boxService.getType(box.typeId),
           region: this.boxService.getRegion(box.typeId)
         });
       }
@@ -111,93 +111,6 @@ export class EnvironmentService {
             box == TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX ||
             box == TypeId.OPEN_JAKANA_SEED_BOX ||
             box == TypeId.OPEN_KYTUNT_SEED_BOX;
-  }
-  private getType(type) :string{
-    if (type == TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX || 
-      type == TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX ||
-      type == TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX ||
-      type == TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX){
-        return 'FORTIFIED';
-    }else if (type == TypeId.OPEN_JAKANA_SEED_BOX ||
-              type == TypeId.OPEN_KYTUNT_SEED_BOX ||
-              type == TypeId.TOYO_JAKANA_SEED_BOX ||
-              type== TypeId.TOYO_KYTUNT_SEED_BOX){
-      return 'SIMPLE';        
-    }
-    return undefined;
-  }
-
-  private getModifiers(type){
-    const key: number = parseInt(type, 10);
-    switch (key) {
-      case TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX && TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX:
-        return [{
-          name: "Fortified",
-          type: "1",
-          description: "Increases minimum rarity to be 3 or higher.",
-          modification: "1"
-        },
-        {
-          name: "Jakana",
-          type: "4",
-          description: "Contain only Classic Jakana Toyoparts.",
-          modification: {
-            "theme": "Classic",
-            "region": "Jakana"
-          }
-        }]
-        break;
-      case TypeId.TOYO_JAKANA_SEED_BOX && TypeId.OPEN_JAKANA_SEED_BOX:
-        return [
-          {
-            "name": "Jakana",
-            "type": "4",
-            "description": "Contain only Classic Jakana Toyoparts.",
-            "modification": {
-              "theme": "Classic",
-              "region": "Jakana"
-            }
-          }
-        ]
-        break;
-      case TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX && TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX:
-        return[
-          {
-            "name": "Fortified",
-            "type": "1",
-            "description": "Increases minimum rarity to be 3 or higher.",
-            "modification": "1"
-          },
-          {
-            "name": "Kytunt",
-            "type": "4",
-            "description": "Contain only Classic Kytunt Toyoparts.",
-            "restrictions": "Available only until 2022-12-31",
-            "modification": {
-              "theme": "Classic",
-              "region": "Kytunt"
-            }
-          }
-        ]
-        break;
-      case TypeId.TOYO_KYTUNT_SEED_BOX && TypeId.OPEN_KYTUNT_SEED_BOX:
-        return[
-          {
-            "name": "Kytunt",
-            "type": "4",
-            "description": "Contain only Classic Kytunt Toyoparts.",
-            "restrictions": "Available only until 2022-12-31",
-            "modification": {
-              "theme": "Classic",
-              "region": "Kytunt"
-            }
-          }
-        ]
-        break;
-      default:
-        return undefined;
-        break;
-    }
   }
 
   /**
