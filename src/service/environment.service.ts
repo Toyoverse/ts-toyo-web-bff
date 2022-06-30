@@ -85,7 +85,7 @@ export class EnvironmentService {
           lastUnboxingStarted: null,
           modifiers: this.getModifiers(box.typeId),
           type: this.getType(box.typeId),
-          region: this.getRegion(box.typeId).name
+          region: this.boxService.getRegion(box.typeId)
         });
       }
       else {
@@ -198,29 +198,6 @@ export class EnvironmentService {
         return undefined;
         break;
     }
-  }
-  private getRegion(type){
-    if (type == TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX || 
-      type == TypeId.OPEN_JAKANA_SEED_BOX ||
-      type == TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX ||
-      type == TypeId.TOYO_JAKANA_SEED_BOX){
-        return {
-          "name": "JAKANA",
-          "createdAt": undefined,
-          "updatedAt": undefined
-      };
-    }else if (type == TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX ||
-              type == TypeId.OPEN_KYTUNT_SEED_BOX ||
-              type == TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX ||
-              type== TypeId.TOYO_KYTUNT_SEED_BOX){
-      return {
-        "name": "KYTUNT",
-        "createdAt": undefined,
-        "updatedAt": undefined
-      }        
-    }
-    
-    return undefined;
   }
 
   /**

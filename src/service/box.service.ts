@@ -107,7 +107,7 @@ export class BoxService {
     };
     
   }
-  private getRegion(type): ToyoRegionModel{
+  getRegion(type): ToyoRegionModel{
     let region: ToyoRegionModel = new ToyoRegionModel();
     if (type == TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX || 
       type == TypeId.OPEN_JAKANA_SEED_BOX ||
