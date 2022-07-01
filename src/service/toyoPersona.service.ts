@@ -33,11 +33,19 @@ export class ToyoPersonaService {
     }
   }
 
-  private ToyoPersonaMapper(
+  ToyoPersonaMapper(
     result: Parse.Object<Parse.Attributes>,
   ): ToyoPersona {
-    const toyo: ToyoPersona = result.attributes as ToyoPersona;
-    return toyo;
+    const toyoPersona: ToyoPersona = new ToyoPersona();
+    toyoPersona.id = result.id;
+    toyoPersona.name = result.get('name');
+    toyoPersona.thumbnail = result.get('thumbnail');
+    toyoPersona.video = result.get('video');
+    toyoPersona.bodyType = result.get('bodyType');
+    toyoPersona.createdAt = result.get('createdAt');
+    toyoPersona.updateAt = result.get('updatedAt');
+
+    return toyoPersona;
   }
 
   /**

@@ -6,10 +6,7 @@ import { response } from 'express';
 import { json } from 'stream/consumers';
 import { PartService } from './part.service';
 import { ToyoService } from './toyo.service';
-import { PlayerService } from './player.service';
 import PartModel from 'src/models/Part.model';
-import { ToyoRegionService } from './toyoRegion.service';
-import ToyoRegionModel from 'src/models/ToyoRegion.model';
 import { TypeId } from 'src/enums/SmartContracts';
 
 @Injectable()
@@ -77,37 +74,31 @@ export class BoxService {
   private async BoxMapper(
     result: Parse.Object<Parse.Attributes>,
   ): Promise<BoxModel> {
-    const boxIsOpen: boolean = result.get('isOpen');
-    const toyoRegion = result.get('region');
-    const typeId = result.get('typeId');
-    const modifiers = result.get('modifiers');
-    const type = result.get('type');
-
-    return {
-      id: result.id,
-      type: type
-        ? type
-        : this.getType(typeId),
-      isOpen: boxIsOpen,
-      toyo: boxIsOpen
+    const box:BoxModel = new BoxModel(); 
+    box.id= result.id;
+    box.typeId= result.get('typeId');
+    box.type= result.get('type')
+        ? result.get('type')
+        : this.getType(box.typeId);
+  box.region= result.get('region')
+        ? await result.get('region').get('name')
+        : this.getRegion(box.typeId);
+    box.isOpen = result.get('region');
+    box.toyo = box.isOpen
         ? await this.toyoService.ToyoMapper(result.get('toyo'))
-        : undefined,
-      hash: result.get('hash'),
-      idOpenBox: result.get('idOpenBox'),
-      idClosedBox: result.get('idClosedBox'),
-      createdAt: result.get('createdAt'),
-      updateAt: result.get('updatedAt'),
-      typeId: typeId,
-      tokenId: result.get('tokenId'),
-      lastUnboxingStartedAt: result.get('lastUnboxingStartedAt'),
-      modifiers: modifiers
-        ? modifiers
-        : this.getModifiers(typeId),
-      region: toyoRegion
-        ? await toyoRegion.get('name')
-        : this.getRegion(typeId),
+        : undefined;
+    box.hash= result.get('hash');
+    box.idOpenBox = result.get('idOpenBox');
+    box.idClosedBox= result.get('idClosedBox');
+    box.tokenId= result.get('tokenId');
+    box.lastUnboxingStartedAt = result.get('lastUnboxingStartedAt');
+    box.modifiers= result.get('modifiers')
+        ? result.get('modifiers')
+        : this.getModifiers(box.typeId);
+    box.createdAt= result.get('createdAt');
+    box.updateAt= result.get('updatedAt');
       
-    };
+    return box;
     
   }
   getRegion(type): string{

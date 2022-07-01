@@ -37,7 +37,7 @@ export class CardService {
 
   }
 
-  private CardMapper(result: Parse.Object<Parse.Attributes>): CardModel{
+  CardMapper(result: Parse.Object<Parse.Attributes>): CardModel{
     const card: CardModel = new CardModel();
 
     card.id = result.id;
