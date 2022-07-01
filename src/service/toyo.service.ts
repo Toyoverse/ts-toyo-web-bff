@@ -90,8 +90,6 @@ export class ToyoService {
         [TypeId.TOYO],
       );
 
-    console.log(onChainToyos);
-
     const offChainToyos = await this.getOffChainToyos(walletAddress);
     const toyos: Array<ToyoModel> = [];
     for (const item of onChainToyos) {
@@ -107,6 +105,7 @@ export class ToyoService {
           toyos.push(await this.ToyoMapper(newToyo[0]));
         } else {
           console.log('não tem no bd o tokenId: ' + item.tokenId);
+          //TODO Background job to save this new Toyo to Current Player
         }
       }
     }
@@ -140,13 +139,15 @@ export class ToyoService {
         )
       : undefined;
 
-    const partsArray = [];
-    for (const part of parts) {
-      partsArray.push(await this.partService.PartMapper(part));
+    if (parts) {
+      const partsArray = [];
+      for (const part of parts) {
+        partsArray.push(await this.partService.PartMapper(part));
+      }
+
+      toyo.parts = partsArray;
     }
-
-    toyo.parts = partsArray;
-
+    
     return toyo;
   }
   private async partsMapper(toyoId: string): Promise<PartModel[]> {
@@ -156,7 +157,6 @@ export class ToyoService {
 
     try {
       const result = await toyoQuery.find();
-      console.log(JSON.parse(JSON.stringify(result)));
       const resultId = await result[0].relation('parts').query().find();
       const parts: PartModel[] = [];
 
