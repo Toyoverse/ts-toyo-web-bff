@@ -42,15 +42,14 @@ export class PartService {
     }
   }
 
-  private async PartMapper(
-    result: Parse.Object<Parse.Attributes>,
-  ): Promise<PartModel> {
+  async PartMapper(result: Parse.Object<Parse.Attributes>): Promise<PartModel> {
     const part: PartModel = new PartModel();
 
     part.id = result.id;
     part.bonusStats = result.get('bonusStats');
     part.toyoTechnoalloy = result.get('toyoTechnoalloy');
-    part.cards = await this.CardsMapper(result.get('cards'));
+    // NOT NEEDY RIGHT NOW
+    // part.cards = await this.CardsMapper(result.get('cards'));
     part.toyoPersona = await this.toyoPersonaService.findToyoPersonaById(
       result.get('toyoPersona').id,
     );
