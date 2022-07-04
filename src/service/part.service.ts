@@ -24,7 +24,7 @@ export class PartService {
     partQuery.equalTo('objectId', id);
 
     try {
-      const result = await partQuery.find();
+      const result = await partQuery.include('toyoPersona').find();
 
       if (result.length < 1 || result[0].id !== id) {
         response.status(404).json({
@@ -42,18 +42,17 @@ export class PartService {
     }
   }
 
-  private async PartMapper(
-    result: Parse.Object<Parse.Attributes>,
-  ): Promise<PartModel> {
+  async PartMapper(result: Parse.Object<Parse.Attributes>): Promise<PartModel> {
     const part: PartModel = new PartModel();
 
     part.id = result.id;
     part.bonusStats = result.get('bonusStats');
     part.toyoTechnoalloy = result.get('toyoTechnoalloy');
-    part.cards = await this.CardsMapper(result.get('cards'));
-    part.toyoPersona = await this.toyoPersonaService.findToyoPersonaById(
-      result.get('toyoPersona').id,
-    );
+    // NOT NEEDY RIGHT NOW
+    // part.cards = await this.CardsMapper(result.get('cards'));
+    part.toyoPersona = result.get('toyoPersona')
+      ? this.toyoPersonaService.ToyoPersonaMapper(result.get('toyoPersona'))
+      : undefined;
     part.toyoPiece = result.get('toyoPiece');
     part.stats = result.get('stats');
     part.createdAt = result.get('createdAt');
@@ -64,8 +63,8 @@ export class PartService {
   private async CardsMapper(result: string[]): Promise<CardModel[]> {
     const cards: CardModel[] = [];
 
-    for (let index = 0; index < result.length; index++) {
-      cards.push(await this.cardService.findCardById(result[index]));
+    for (const card of result) {
+      cards.push(await this.cardService.findCardById(card));
     }
 
     return cards;

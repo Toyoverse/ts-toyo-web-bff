@@ -12,7 +12,6 @@ import { ToyoPersonaService } from './toyoPersona.service';
 
 @Injectable()
 export class ToyoService {
-  
   constructor(
     private configService: ConfigService,
     private readonly partService: PartService,
@@ -32,12 +31,12 @@ export class ToyoService {
 
       if (result.length < 1 || result[0].id !== id) {
         response.status(404).json({
-          erros: ['Card not found!'],
+          erros: ['Toyo not found!'],
         });
+        return;
       }
-      
-      const toyo: ToyoModel = await this.ToyoMapper(result[0]);
-      
+      const parts = await result[0].relation('parts').query().find();
+      const toyo: ToyoModel = await this.ToyoMapper(result[0], parts);
 
       return toyo;
     } catch (error) {
@@ -91,8 +90,6 @@ export class ToyoService {
         [TypeId.TOYO],
       );
 
-    console.log(onChainToyos);
-
     const offChainToyos = await this.getOffChainToyos(walletAddress);
     const toyos: Array<ToyoModel> = [];
     for (const item of onChainToyos) {
@@ -107,24 +104,24 @@ export class ToyoService {
           //TODO Background job to update this new Toyo to Current Player
           toyos.push(await this.ToyoMapper(newToyo[0]));
         } else {
-          console.log('não tem no bd');
+          console.log('não tem no bd o tokenId: ' + item.tokenId);
+          //TODO Background job to save this new Toyo to Current Player
         }
       }
     }
     return toyos;
   }
   async getToyoById(id: string): Promise<ToyoModel> {
-
     const toyoId: string = Buffer.from(id, 'base64').toString('ascii');
 
     const toyo: ToyoModel = await this.findToyoById(toyoId);
-    toyo.parts = await this.partsMapper(toyoId);
 
     return toyo;
   }
 
   async ToyoMapper(
     result: Parse.Object<Parse.Attributes>,
+    parts?: Parse.Object<Parse.Attributes>[],
   ): Promise<ToyoModel> {
     const toyo: ToyoModel = new ToyoModel();
 
@@ -136,14 +133,24 @@ export class ToyoService {
     toyo.updateAt = result.get('updatedAt');
     toyo.tokenId = result.get('tokenId');
     toyo.transactionHash = result.get('transactionHash');
-    const toyoPersona = result.get('toyoPersonaOrigin');
-    toyo.toyoPersonaOrigin = toyoPersona
-      ? await this.toyoPersonaService.findToyoPersonaById(toyoPersona.id)
+    toyo.toyoPersonaOrigin = result.get('toyoPersonaOrigin')
+      ? await this.toyoPersonaService.findToyoPersonaById(
+          result.get('toyoPersonaOrigin').id,
+        )
       : undefined;
 
+    if (parts) {
+      const partsArray = [];
+      for (const part of parts) {
+        partsArray.push(await this.partService.PartMapper(part));
+      }
+
+      toyo.parts = partsArray;
+    }
+    
     return toyo;
   }
-  private async partsMapper(toyoId: string): Promise<PartModel[]>{
+  private async partsMapper(toyoId: string): Promise<PartModel[]> {
     const Toyo = Parse.Object.extend('Toyo');
     const toyoQuery = new Parse.Query(Toyo);
     toyoQuery.equalTo('objectId', toyoId);
@@ -152,17 +159,18 @@ export class ToyoService {
       const result = await toyoQuery.find();
       const resultId = await result[0].relation('parts').query().find();
       const parts: PartModel[] = [];
-      
-      for (const box of resultId ){
-        parts.push( await this.partService.findPartById(box.id));
+
+      for (const box of resultId) {
+        parts.push(await this.partService.findPartById(box.id));
       }
       return parts;
-  } catch (e){
+    } catch (e) {
+      console.log(e);
       response.status(500).json({
-      error: [e.message],
-    });
+        error: [e.message],
+      });
+    }
   }
-}
 
   /**
    * Function to configure ParseSDK

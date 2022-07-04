@@ -1,10 +1,19 @@
+import * as express from 'express';
+import * as cors from 'cors';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { getEnabledCategories } from 'trace_events';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const options: cors.CorsOptions = {
+    methods: 'GET,POST',
+    origin: '*'
+  };
+
+  app.use(cors(options));
   app.use(helmet());
 
   const config = new DocumentBuilder()
