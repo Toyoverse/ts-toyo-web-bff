@@ -49,7 +49,7 @@ export class EnvironmentService {
   async findBoxesByWalletId(walletAddress: string) {
     try {
     const boxesOnChain =
-      await this.onchainService.getTokenOwnerEntityByWalletAndTypeId(
+      await this.onchainService.getTokenOwnerEntityWithoutHashByWalletAndTypeId(
         walletAddress,
         [
           TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX,
@@ -80,8 +80,6 @@ export class EnvironmentService {
         boxes.push({
           ...box,
           isOpen: this.isOpen(box.typeId), 
-          idOpenBox: null,
-          idClosedBox: null,
           lastUnboxingStarted: null,
           modifiers: this.boxService.getModifiers(box.typeId),
           type: this.boxService.getType(box.typeId),

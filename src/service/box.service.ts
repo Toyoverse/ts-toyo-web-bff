@@ -80,16 +80,13 @@ export class BoxService {
     box.type= result.get('type')
         ? result.get('type')
         : this.getType(box.typeId);
-  box.region= result.get('region')
+    box.region= result.get('region')
         ? await result.get('region').get('name')
         : this.getRegion(box.typeId);
-    box.isOpen = result.get('region');
-    box.toyo = box.isOpen
+    box.isOpen = result.get('isOpen');
+    box.toyo = box.isOpen && result.get('toyo')
         ? await this.toyoService.ToyoMapper(result.get('toyo'))
         : undefined;
-    box.hash= result.get('hash');
-    box.idOpenBox = result.get('idOpenBox');
-    box.idClosedBox= result.get('idClosedBox');
     box.tokenId= result.get('tokenId');
     box.lastUnboxingStartedAt = result.get('lastUnboxingStartedAt');
     box.modifiers= result.get('modifiers')
