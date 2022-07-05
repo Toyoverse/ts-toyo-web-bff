@@ -49,4 +49,25 @@ export class OnchainService {
 
     return data.tokenOwnerEntities;
   }
+  async getTokenOwnerEntityWithoutHashByWalletAndTypeId(
+    walletId: string,
+    typeId: Array<TypeId>,
+  ): Promise<any> {
+    const query = gql`
+      {
+        tokenOwnerEntities(first: 100, where: {currentOwner: "${walletId}", typeId_in: [${typeId}]}) {
+            typeId,
+            tokenId,
+            currentOwner
+        }
+      }
+    `;
+
+    const data: any = await request(
+      this.configService.get<string>('THEGRAPH_URL'),
+      query,
+    );
+
+    return data.tokenOwnerEntities;
+  }
 }
