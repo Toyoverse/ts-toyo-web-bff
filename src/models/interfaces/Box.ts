@@ -9,8 +9,8 @@ export interface Box {
   isOpen: boolean;
   toyo: IToyo;
   hash: string;
-  idOpenBox: string;
-  idClosedBox: string;
+  tokenIdOpenBox: string;
+  tokenIdClosedBox: string;
   player?: Player;
   createdAt?: Date;
   updateAt?: Date;
