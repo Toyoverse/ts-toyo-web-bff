@@ -53,6 +53,7 @@ export class BoxService {
       const result = await player[0]
         .relation('boxes')
         .query()
+        .limit(500)
         .include('region')
         .include('toyo')
         .include('toyo.toyoPersonaOrigin')

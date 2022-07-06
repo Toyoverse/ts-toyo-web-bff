@@ -72,6 +72,7 @@ export class ToyoService {
       const toyos = await player[0]
         .relation('toyos')
         .query()
+        .limit(500)
         .include('toyoPersonaOrigin')
         .find();
 
