@@ -17,9 +17,9 @@ export default class BoxModel implements Box {
   @ApiProperty()
   hash: string;
   @ApiProperty()
-  idOpenBox: string;
+  tokenIdOpenBox: string;
   @ApiProperty()
-  idClosedBox: string;
+  tokenIdClosedBox: string;
   @ApiProperty()
   player?: PlayerModel;
   @ApiProperty()

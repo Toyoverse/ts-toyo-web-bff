@@ -53,6 +53,7 @@ export class BoxService {
       const result = await player[0]
         .relation('boxes')
         .query()
+        .limit(500)
         .include('region')
         .include('toyo')
         .include('toyo.toyoPersonaOrigin')
@@ -117,7 +118,7 @@ export class BoxService {
   getModifiers(type){
     const key: number = parseInt(type, 10);
     switch (key) {
-      case TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX && TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX:
+      case (TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX || TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX):
         return [{
           name: "Fortified",
           type: "1",
@@ -134,7 +135,7 @@ export class BoxService {
           }
         }]
         break;
-      case TypeId.TOYO_JAKANA_SEED_BOX && TypeId.OPEN_JAKANA_SEED_BOX:
+      case (TypeId.TOYO_JAKANA_SEED_BOX || TypeId.OPEN_JAKANA_SEED_BOX):
         return [
           {
             "name": "Jakana",
@@ -147,7 +148,7 @@ export class BoxService {
           }
         ]
         break;
-      case TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX && TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX:
+      case (TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX || TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX):
         return[
           {
             "name": "Fortified",
@@ -167,7 +168,7 @@ export class BoxService {
           }
         ]
         break;
-      case TypeId.TOYO_KYTUNT_SEED_BOX && TypeId.OPEN_KYTUNT_SEED_BOX:
+      case (TypeId.TOYO_KYTUNT_SEED_BOX || TypeId.OPEN_KYTUNT_SEED_BOX):
         return[
           {
             "name": "Kytunt",
