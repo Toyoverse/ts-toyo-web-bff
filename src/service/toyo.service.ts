@@ -151,6 +151,34 @@ export class ToyoService {
     
     return toyo;
   }
+  async ToyoMapperWithOutIdCreatedUpdated(
+    result: Parse.Object<Parse.Attributes>,
+    parts?: Parse.Object<Parse.Attributes>[],
+  ): Promise<ToyoModel> {
+    const toyo: ToyoModel = new ToyoModel();
+
+    toyo.name = result.get('name');
+    toyo.hasTenParts = result.get('hasTenParts');
+    toyo.isToyoSelected = result.get('isToyoSelected');
+    toyo.tokenId = result.get('tokenId');
+    toyo.transactionHash = result.get('transactionHash');
+    toyo.toyoPersonaOrigin = result.get('toyoPersonaOrigin')
+      ? await this.toyoPersonaService.findToyoPersonaById(
+          result.get('toyoPersonaOrigin').id,
+        )
+      : undefined;
+
+    if (parts) {
+      const partsArray = [];
+      for (const part of parts) {
+        partsArray.push(await this.partService.PartMapperWithIdDecoded(part));
+      }
+
+      toyo.parts = partsArray;
+    }
+    
+    return toyo;
+  }
   private async partsMapper(toyoId: string): Promise<PartModel[]> {
     const Toyo = Parse.Object.extend('Toyo');
     const toyoQuery = new Parse.Query(Toyo);

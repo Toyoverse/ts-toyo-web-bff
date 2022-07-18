@@ -4,7 +4,7 @@ import { IToyoPersona } from './interfaces/IToyoPersona';
 export default class ToyoPersonaModel implements IToyoPersona {
   
   @ApiProperty()
-  private objectId?: string;
+  objectId?: string;
   @ApiProperty()
   name: string;
   @ApiProperty()

@@ -37,7 +37,7 @@ export class ToyoPersonaService {
     result: Parse.Object<Parse.Attributes>,
   ): ToyoPersona {
     const toyoPersona: ToyoPersona = new ToyoPersona();
-    toyoPersona.id = result.id;
+    toyoPersona.objectId = result.id;
     toyoPersona.name = result.get('name');
     toyoPersona.thumbnail = result.get('thumbnail');
     toyoPersona.video = result.get('video');

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import BoxModel from '../models/Box.model';
 import * as Parse from 'parse/node';
@@ -8,6 +8,11 @@ import { PartService } from './part.service';
 import { ToyoService } from './toyo.service';
 import PartModel from 'src/models/Part.model';
 import { TypeId } from 'src/enums/SmartContracts';
+import { ToyoRegionService } from './toyoRegion.service';
+import { PlayerService } from './player.service';
+import { OnchainService } from './onchain.service';
+import { IBoxOnChain } from 'src/models/interfaces/IBoxOnChain';
+import { ISwappedEntities } from 'src/models/interfaces/ISwappedEntities';
 
 @Injectable()
 export class BoxService {
@@ -15,6 +20,10 @@ export class BoxService {
     private configService: ConfigService,
     private readonly partService: PartService,
     private readonly toyoService: ToyoService,
+    private readonly toyoRegionService: ToyoRegionService,
+    @Inject(forwardRef(() => PlayerService))
+    private readonly playerService: PlayerService,
+    private readonly onchainService: OnchainService,
   ) {
     this.ParseServerConfiguration();
   }
@@ -71,6 +80,99 @@ export class BoxService {
       });
     }
   }
+  async saveBox(boxOn: IBoxOnChain): Promise<BoxModel>{
+    try {
+    const Box = Parse.Object.extend("Boxes");
+    const box = new Box();
+
+    const Region = Parse.Object.extend("ToyoRegion");
+    const regionQuery = new Parse.Query(Region);
+    regionQuery.equalTo('name', this.getRegion(boxOn.typeId));
+    const region = await regionQuery.find();
+
+    const Player = Parse.Object.extend("Players");
+    const playerQuery = new Parse.Query(Player);
+    playerQuery.equalTo('walletAddress', boxOn.currentOwner);
+    const player = await playerQuery.find();
+
+    const type = this.getType(boxOn.typeId)
+    const isOpen = this.getIsOpen(boxOn.typeId);
+    let boxOnChain: ISwappedEntities[];
+    let boxToyo:ISwappedEntities;
+    let boxOpen: ISwappedEntities;
+    let toyo:Parse.Object<Parse.Attributes>[];
+    let parts:Parse.Object<Parse.Attributes>[];
+
+    if (isOpen){
+      boxOnChain = await this.onchainService.getTokenSwappedEntitiesByWalletAndTokenId(boxOn.currentOwner, boxOn.transactionHash);
+      for(const boxOn of boxOnChain){
+        if (boxOn.toTypeId == "9"){
+          boxToyo =  boxOn;
+        }else {
+          boxOpen = boxOn;
+        }
+      }
+    }
+
+    if (boxOnChain){
+      const Toyo = Parse.Object.extend("Toyo");
+      const toyoQuery = new Parse.Query(Toyo);
+      toyoQuery.equalTo('tokenId', boxToyo.toTokenId);
+      toyo = await toyoQuery.include('parts').find();
+
+      parts = await toyo[0].relation('parts').query().find();
+    
+      box.set("toyo",isOpen
+      ? toyo[0]
+      : undefined);
+      
+      const relation = box.relation('parts');
+      relation.add(parts);
+    }
+
+    await box.save({
+      transactionHash: boxOn.transactionHash,
+      tokenId: boxOn.tokenId,
+      typeId: boxOn.typeId,
+      isOpen: isOpen,
+      modifiers: this.getModifiers(boxOn.typeId),
+      type: type,
+      typeIdClosedBox: boxOnChain
+        ? boxOpen.fromTypeId
+        : boxOn.typeId,
+      tokenIdClosedBox: isOpen
+        ? boxOpen.fromTokenId
+        : boxOn.tokenId,
+      typeIdOpenBox: isOpen
+        ? boxOn.typeId
+        : undefined,
+      tokenIdOpenBox: isOpen
+        ? boxOn.tokenId
+        : undefined,
+      region: region[0],
+      player: player[0],
+    });
+
+    const relationPlayerBoxes = player[0].relation('boxes');
+
+    if (toyo){
+      const ralationPlayerToyos = player[0].relation('toyos');
+      const ralationPlayerToyoParts = player[0].relation('toyoParts');
+      ralationPlayerToyos.add(toyo);
+      ralationPlayerToyoParts.add(parts);
+      
+    }
+
+    relationPlayerBoxes.add(box);
+    await player[0].save();
+
+    return box;
+  } catch(e){
+    response.status(500).json({
+      error: [e.message],
+    });
+  }
+  }
 
   private async BoxMapper(
     result: Parse.Object<Parse.Attributes>,
@@ -99,6 +201,7 @@ export class BoxService {
     return box;
     
   }
+  
   getRegion(type): string{
     if (type == TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX || 
       type == TypeId.OPEN_JAKANA_SEED_BOX ||
@@ -201,19 +304,12 @@ export class BoxService {
     }
     return undefined;
   }
-
-  private async PartsMapper(
-    result: Parse.Object<Parse.Attributes>[],
-  ): Promise<PartModel[]> {
-    const parts: PartModel[] = [];
-
-    for (let index = 0; index < result.length; index++) {
-      parts.push(await this.partService.findPartById(result[index].id));
-    }
-
-    return parts;
+  getIsOpen(box: any): boolean{
+    return box == TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX ||
+            box == TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX ||
+            box == TypeId.OPEN_JAKANA_SEED_BOX ||
+            box == TypeId.OPEN_KYTUNT_SEED_BOX;
   }
-
   /**
    * Function to configure ParseSDK
    */

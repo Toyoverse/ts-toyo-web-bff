@@ -5,6 +5,7 @@ export default class ToyoRegionModel implements IToyoRegion{
     name: string;
     createdAt?: Date;
     updatedAt?: Date;
+    managedTypes?: string[];
     
     constructor () {}
     get id(){

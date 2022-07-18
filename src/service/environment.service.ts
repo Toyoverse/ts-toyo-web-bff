@@ -8,6 +8,9 @@ import { OnchainService } from './onchain.service';
 import { TypeId } from 'src/enums/SmartContracts';
 import { BoxService } from './box.service';
 import { json } from 'stream/consumers';
+import { SaveBoxProducerService } from '../jobs/saveBox-producer.service'
+import { IBoxOnChain } from 'src/models/interfaces/IBoxOnChain';
+import BoxModel from 'src/models/Box.model';
 
 @Injectable()
 export class EnvironmentService {
@@ -16,6 +19,7 @@ export class EnvironmentService {
     private readonly playerService: PlayerService,
     private readonly onchainService: OnchainService,
     private readonly boxService: BoxService,
+    private readonly saveBoxProducerService: SaveBoxProducerService,
   ) {
     this.ParseServerConfiguration();
   }
@@ -48,8 +52,8 @@ export class EnvironmentService {
 
   async findBoxesByWalletId(walletAddress: string) {
     try {
-    const boxesOnChain =
-      await this.onchainService.getTokenOwnerEntityWithoutHashByWalletAndTypeId(
+    const boxesOnChain:IBoxOnChain[] =
+      await this.onchainService.getTokenOwnerEntityByWalletAndTypeId(
         walletAddress,
         [
           TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX,
@@ -66,10 +70,10 @@ export class EnvironmentService {
       walletAddress,
     );
 
-    // TODO Depois...
-    // if (boxesOnChain.length !== boxesOffChain.length) {
-    //   //precisa rodar background job para atualizar dados
-    // }
+    if (boxesOnChain.length !== boxesOffChain.length) {
+        await this.saveBoxProducerService.saveBox(boxesOffChain, boxesOnChain);
+    }
+    
   
     const boxes = []
 
@@ -79,7 +83,7 @@ export class EnvironmentService {
       if (!result){
         boxes.push({
           ...box,
-          isOpen: this.isOpen(box.typeId), 
+          isOpen: this.boxService.getIsOpen(box.typeId), 
           lastUnboxingStarted: null,
           modifiers: this.boxService.getModifiers(box.typeId),
           type: this.boxService.getType(box.typeId),
@@ -103,13 +107,7 @@ export class EnvironmentService {
       error: [error.message],
     });
   }
-  }
-  private isOpen(box: any): boolean{
-    return box == TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX ||
-            box == TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX ||
-            box == TypeId.OPEN_JAKANA_SEED_BOX ||
-            box == TypeId.OPEN_KYTUNT_SEED_BOX;
-  }
+  } 
 
   /**
    * Function to configure ParseSDK
