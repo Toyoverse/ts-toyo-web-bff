@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import ToyoModel from '../models/Toyo.model';
 import * as Parse from 'parse/node';
@@ -9,6 +9,9 @@ import { OnchainService } from './onchain.service';
 import { TypeId } from 'src/enums/SmartContracts';
 import { IToyo, IToyoPersona } from '../models/interfaces';
 import { ToyoPersonaService } from './toyoPersona.service';
+import { ToyoProducerService } from '../jobs/toyo-producer.service';
+import { IBoxOnChain } from '../models/interfaces/IBoxOnChain';
+import PlayerModel from 'src/models/Player.model';
 
 @Injectable()
 export class ToyoService {
@@ -17,6 +20,8 @@ export class ToyoService {
     private readonly partService: PartService,
     private readonly toyoPersonaService: ToyoPersonaService,
     private readonly onchainService: OnchainService,
+    @Inject(forwardRef(() => ToyoProducerService))
+    private readonly toyoProducerService: ToyoProducerService,
   ) {
     this.ParseServerConfiguration();
   }
@@ -85,7 +90,7 @@ export class ToyoService {
   }
 
   async getToyosByWalletAddress(walletAddress: string): Promise<ToyoModel[]> {
-    const onChainToyos =
+    const onChainToyos: IBoxOnChain[] =
       await this.onchainService.getTokenOwnerEntityByWalletAndTypeId(
         walletAddress,
         [TypeId.TOYO],
@@ -103,11 +108,13 @@ export class ToyoService {
         const newToyo = await this.findToyoByTokenId(item.tokenId);
         if (newToyo.length === 1) {
           //TODO Background job to update this new Toyo to Current Player
+          this.toyoProducerService.updateToyo(walletAddress, newToyo[0]);
           toyos.push(await this.ToyoMapper(newToyo[0]));
         } else {
           console.log('não tem no bd o tokenId: ' + item.tokenId);
           //TODO Background job to save this new Toyo to Current Player
-        }
+          this.toyoProducerService.saveToyo(item);
+        }   
       }
     }
     return toyos;
@@ -178,6 +185,14 @@ export class ToyoService {
     }
     
     return toyo;
+  }
+  async saveToyoCurrentPlayer(player: PlayerModel, onChain: IBoxOnChain): Promise<ToyoModel>{
+
+    return new ToyoModel(); //Delete
+
+  }
+  async updateToyoCurrentPlayer(player: PlayerModel):Promise<ToyoModel>{
+    return new ToyoModel() //Delete
   }
   private async partsMapper(toyoId: string): Promise<PartModel[]> {
     const Toyo = Parse.Object.extend('Toyo');
