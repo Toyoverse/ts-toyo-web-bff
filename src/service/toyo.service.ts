@@ -188,20 +188,20 @@ export class ToyoService {
     
     return toyo;
   }
-  async saveLogToyoCurrentPlayer(player: PlayerModel, onChain: IBoxOnChain): Promise<ILog>{
+  async saveLogToyoCurrentPlayer(onChain: IBoxOnChain): Promise<ILog>{
 
     try{
       const Log = Parse.Object.extend("Logs");
       const log = new Log();
 
       await log.save({
-        type: '',
-        message: '',
-        data:{
-          "tokenId": onChain.tokenId,
-          "typeId": onChain.typeId,
-          "walletAddress": player.wallet,
-        },
+        type: 'Error',
+        message: 'Toyo does not exist in off-chain database',
+        data: {
+          tokenId : onChain.tokenId,
+          typeId: onChain.typeId,
+          walletAddress: onChain.currentOwner,
+        }
       });
 
       return log;

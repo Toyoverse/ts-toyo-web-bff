@@ -11,7 +11,6 @@ import { IUpdateToyo } from 'src/models/interfaces/IUpdateToyo';
 export class ToyoConsumer{
 
     constructor( 
-        private readonly playerService: PlayerService,
         private readonly toyoService: ToyoService,
         ){}
 
@@ -25,10 +24,26 @@ export class ToyoConsumer{
     @Process('saveLogToyo-queue')
     async saveLogToyoJob(job: Job<IBoxOnChain>){
         const { data } = job;
-        const player =  await this.playerService.findPlayerByWalletId(data.currentOwner);
-        const toyo = await this.toyoService.saveLogToyoCurrentPlayer(player, data);
+        const toyo = await this.toyoService.saveLogToyoCurrentPlayer(data);
         return toyo;
 
+    }
+    @OnQueueActive()
+    onQueueActive(job: Job){
+        console.log('Queue active');
+    }
+    @OnQueueCompleted()
+    onQueueCompleted(job:Job){
+        console.log("Queue completed");
+    }
+    @OnQueueFailed()
+    onQueueFailed(job:Job){
+        console.log('Queue failed');
+    }
+
+    @OnQueueError()
+    onQueueError(job: Job){
+        console.log('Queue error')
     }
 
 }
