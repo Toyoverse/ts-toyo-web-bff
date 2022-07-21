@@ -108,7 +108,7 @@ export class ToyoService {
         toyos.push(await this.ToyoMapper(toyo));
       } else {
         const newToyo = await this.findToyoByTokenId(item.tokenId);
-        if (newToyo.length === 1) {
+        if (newToyo.length >= 1) {
           //TODO Background job to update this new Toyo to Current Player
           await this.toyoProducerService.updateToyo(walletAddress, newToyo[0]);
           toyos.push(await this.ToyoMapper(newToyo[0]));
@@ -219,12 +219,17 @@ export class ToyoService {
       playerQuery.equalTo('walletAddress', toyoUpdate.wallet);
       const player = await playerQuery.find();
 
+      const Toyo = Parse.Object.extend("Toyo");
+      const toyoQuery = new Parse.Query(Toyo);
+      toyoQuery.equalTo('tokenId', toyoUpdate.tokenId);
+      const toyo = await toyoQuery.find();
+
       const ralation = player[0].relation('toyos');
-      ralation.add(toyoUpdate.toyo);
+      ralation.add(toyo[0]);
 
       await player[0].save();
 
-      return toyoUpdate.toyo;
+      return toyo[0];
     }catch(e){
       response.status(500).json({
         error: [e.message],

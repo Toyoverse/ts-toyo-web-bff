@@ -3,7 +3,6 @@ import { forwardRef, Inject, Injectable } from "@nestjs/common";
 import { Queue } from 'bull';
 import { IBoxOnChain } from 'src/models/interfaces/IBoxOnChain';
 import { IUpdateToyo } from 'src/models/interfaces/IUpdateToyo';
-import { PlayerService, ToyoService } from 'src/service';
 
 @Injectable()
 export class ToyoProducerService{
@@ -14,8 +13,8 @@ export class ToyoProducerService{
 
     async updateToyo(walletAddress: string, toyo: Parse.Object<Parse.Attributes>){
         const toyoUpdate: IUpdateToyo = {
-            toyo : toyo,
-            wallet : walletAddress
+            wallet : walletAddress,
+            tokenId: toyo.get("tokenId")
         }
         await this.queue.add('updateToyo-queue', toyoUpdate, {
             attempts: 3,
