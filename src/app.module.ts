@@ -14,8 +14,11 @@ import {
   OnchainService,
   ToyoRegionService,
   SaveBoxProducerService,
+  SaveBoxConsumer,
+  ToyoProducerService,
+  ToyoConsumer
+
 } from './service';
-import { SaveBoxConsumer } from './jobs/saveBob-cosumer';
 import { Queue } from 'bull';
 import { MiddlewareBuilder } from '@nestjs/core';
 import { createBullBoard } from 'bull-board';
@@ -28,6 +31,9 @@ import { BullAdapter } from 'bull-board/bullAdapter';
     }),
     BullModule.registerQueue({
       name: 'saveBox-queue',
+    }),
+    BullModule.registerQueue({
+      name: 'toyo-queue',
     }),
     BullModule.forRoot({
       redis: {
@@ -49,10 +55,12 @@ import { BullAdapter } from 'bull-board/bullAdapter';
     ToyoRegionService,
     SaveBoxProducerService,
     SaveBoxConsumer,
+    ToyoProducerService,
+    ToyoConsumer,
   ],
 })
 export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AuthMiddleware).forRoutes(AppController);
-  }
-}
+   configure(consumer: MiddlewareConsumer) {
+     consumer.apply(AuthMiddleware).forRoutes(AppController);
+   }
+ }

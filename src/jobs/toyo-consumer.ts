@@ -3,6 +3,7 @@ import { Processor, Process, OnQueueActive, OnQueueError, OnQueueCompleted, OnQu
 import { PlayerService, ToyoService } from 'src/service';
 import { IBoxOnChain } from 'src/models/interfaces/IBoxOnChain';
 import PlayerModel from 'src/models/Player.model';
+import { IUpdateToyo } from 'src/models/interfaces/IUpdateToyo';
 
 @Processor({
     name: 'toyo-queue',
@@ -15,18 +16,17 @@ export class ToyoConsumer{
         ){}
 
     @Process('updateToyo-queue')
-    async updateToyoJob(job: Job<PlayerModel>){
+    async updateToyoJob(job: Job<IUpdateToyo>){
         const { data } = job;
         const toyo = await this.toyoService.updateToyoCurrentPlayer(data);
         return toyo;
-        
     }
 
-    @Process('saveToyo-queue')
-    async saveToyoJob(job: Job<IBoxOnChain>){
+    @Process('saveLogToyo-queue')
+    async saveLogToyoJob(job: Job<IBoxOnChain>){
         const { data } = job;
         const player =  await this.playerService.findPlayerByWalletId(data.currentOwner);
-        const toyo = await this.toyoService.saveToyoCurrentPlayer(player, data);
+        const toyo = await this.toyoService.saveLogToyoCurrentPlayer(player, data);
         return toyo;
 
     }

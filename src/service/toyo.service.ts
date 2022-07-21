@@ -12,6 +12,8 @@ import { ToyoPersonaService } from './toyoPersona.service';
 import { ToyoProducerService } from '../jobs/toyo-producer.service';
 import { IBoxOnChain } from '../models/interfaces/IBoxOnChain';
 import PlayerModel from 'src/models/Player.model';
+import { ILog } from 'src/models/interfaces/ILog';
+import { IUpdateToyo } from 'src/models/interfaces/IUpdateToyo';
 
 @Injectable()
 export class ToyoService {
@@ -108,12 +110,12 @@ export class ToyoService {
         const newToyo = await this.findToyoByTokenId(item.tokenId);
         if (newToyo.length === 1) {
           //TODO Background job to update this new Toyo to Current Player
-          this.toyoProducerService.updateToyo(walletAddress, newToyo[0]);
+          await this.toyoProducerService.updateToyo(walletAddress, newToyo[0]);
           toyos.push(await this.ToyoMapper(newToyo[0]));
         } else {
           console.log('não tem no bd o tokenId: ' + item.tokenId);
           //TODO Background job to save this new Toyo to Current Player
-          this.toyoProducerService.saveToyo(item);
+          await this.toyoProducerService.saveToyo(item);
         }   
       }
     }
@@ -186,13 +188,48 @@ export class ToyoService {
     
     return toyo;
   }
-  async saveToyoCurrentPlayer(player: PlayerModel, onChain: IBoxOnChain): Promise<ToyoModel>{
+  async saveLogToyoCurrentPlayer(player: PlayerModel, onChain: IBoxOnChain): Promise<ILog>{
 
-    return new ToyoModel(); //Delete
+    try{
+      const Log = Parse.Object.extend("Logs");
+      const log = new Log();
 
+      await log.save({
+        type: '',
+        message: '',
+        data:{
+          "tokenId": onChain.tokenId,
+          "typeId": onChain.typeId,
+          "walletAddress": player.wallet,
+        },
+      });
+
+      return log;
+    } catch(e){
+      response.status(500).json({
+        error: [e.message],
+      });
+    }
+    
   }
-  async updateToyoCurrentPlayer(player: PlayerModel):Promise<ToyoModel>{
-    return new ToyoModel() //Delete
+  async updateToyoCurrentPlayer(toyoUpdate: IUpdateToyo):Promise<Parse.Object<Parse.Attributes>>{
+    try {
+      const Player = Parse.Object.extend("Players");
+      const playerQuery = new Parse.Query(Player);
+      playerQuery.equalTo('walletAddress', toyoUpdate.wallet);
+      const player = await playerQuery.find();
+
+      const ralation = player[0].relation('toyos');
+      ralation.add(toyoUpdate.toyo);
+
+      await player[0].save();
+
+      return toyoUpdate.toyo;
+    }catch(e){
+      response.status(500).json({
+        error: [e.message],
+      })
+    }
   }
   private async partsMapper(toyoId: string): Promise<PartModel[]> {
     const Toyo = Parse.Object.extend('Toyo');
