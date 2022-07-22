@@ -3,4 +3,5 @@ export interface IToyoRegion{
     name: string;
     createdAt?: Date;
     updatedAt?: Date;
+    managedTypes?:string[];
 }

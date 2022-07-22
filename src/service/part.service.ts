@@ -7,6 +7,7 @@ import { json } from 'stream/consumers';
 import { ToyoPersonaService } from './toyoPersona.service';
 import CardModel from 'src/models/Card.model';
 import { CardService } from './card.service';
+import { ISwappedEntities } from 'src/models/interfaces/ISwappedEntities';
 
 @Injectable()
 export class PartService {
@@ -18,7 +19,7 @@ export class PartService {
     this.ParseServerConfiguration();
   }
 
-  async findPartById(id: string): Promise<PartModel> {
+  async findPartById(id: string, isPost?: boolean): Promise<PartModel> {
     const Part = Parse.Object.extend('ToyoParts', PartModel);
     const partQuery = new Parse.Query(Part);
     partQuery.equalTo('objectId', id);
@@ -31,8 +32,12 @@ export class PartService {
           erros: ['Part not found!'],
         });
       }
-
-      const part = await this.PartMapper(result[0]);
+      let part: PartModel;
+      if (isPost){
+        part = await this.PartMapperWithIdDecoded(result[0]);
+      }else{
+       part = await this.PartMapper(result[0]);
+      }
 
       return part;
     } catch (error) {
@@ -46,6 +51,24 @@ export class PartService {
     const part: PartModel = new PartModel();
 
     part.id = result.id;
+    part.bonusStats = result.get('bonusStats');
+    part.toyoTechnoalloy = result.get('toyoTechnoalloy');
+    // NOT NEEDY RIGHT NOW
+    // part.cards = await this.CardsMapper(result.get('cards'));
+    part.toyoPersona = result.get('toyoPersona')
+      ? this.toyoPersonaService.ToyoPersonaMapper(result.get('toyoPersona'))
+      : undefined;
+    part.toyoPiece = result.get('toyoPiece');
+    part.stats = result.get('stats');
+    part.createdAt = result.get('createdAt');
+    part.updateAt = result.get('updatedAt');
+
+    return part;
+  }
+  async PartMapperWithIdDecoded(result: Parse.Object<Parse.Attributes>): Promise<PartModel> {
+    const part: PartModel = new PartModel();
+
+    part.objectId = result.id;
     part.bonusStats = result.get('bonusStats');
     part.toyoTechnoalloy = result.get('toyoTechnoalloy');
     // NOT NEEDY RIGHT NOW

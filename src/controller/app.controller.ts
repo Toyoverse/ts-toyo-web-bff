@@ -25,10 +25,10 @@ export class AppController {
   async getPlayerBoxes(@Req() request: Request, @Res() response: Response) {
     try {
       const boxes = await this.EnvironmentService.findBoxesByWalletId(
-        request.walletId,
+        response.locals.walletId,
       );
 
-      if (boxes.wallet === request.walletId) {
+      if (boxes.wallet === response.locals.walletId) {
         response.status(200).json({
           player: boxes,
         });
@@ -53,7 +53,7 @@ export class AppController {
   async getPlayerToyos(@Req() request: Request, @Res() response: Response) {
     try {
       const playerToyos: ToyoModel[] =
-        await this.toyoService.getToyosByWalletAddress(request.walletId);
+        await this.toyoService.getToyosByWalletAddress(response.locals.walletId);
 
       return response.status(200).json({
         toyos: playerToyos,

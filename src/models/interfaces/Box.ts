@@ -18,5 +18,8 @@ export interface Box {
   tokenId: string;
   region: IToyoRegion | string;
   modifiers: object;
+  typeIdClosedBox: string;
+  typeIdOpenBox: string; 
+  parts?:Parts[]
 
 }

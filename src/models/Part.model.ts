@@ -3,7 +3,7 @@ import { Parts } from "./interfaces/Part";
 import ToyoPersonaModel from "./ToyoPersona.model";
 
 export default class PartModel implements Parts{
-    private objectId: string;
+    objectId: string;
     bonusStats: object;
     toyoTechnoalloy: string;
     cards: CardModel[];

@@ -16,7 +16,7 @@ export default class PlayerModel implements Player {
   toyoParts: PartsModel[];
   boxes: BoxModel[];
   createdAt: Date;
-  updateAt: Date;
+  updatedAt: Date;
 
   constructor() {}
 
