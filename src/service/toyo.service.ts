@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import ToyoModel from '../models/Toyo.model';
 import * as Parse from 'parse/node';
@@ -9,6 +9,11 @@ import { OnchainService } from './onchain.service';
 import { TypeId } from 'src/enums/SmartContracts';
 import { IToyo, IToyoPersona } from '../models/interfaces';
 import { ToyoPersonaService } from './toyoPersona.service';
+import { ToyoProducerService } from '../jobs/toyo-producer.service';
+import { IBoxOnChain } from '../models/interfaces/IBoxOnChain';
+import PlayerModel from 'src/models/Player.model';
+import { ILog } from 'src/models/interfaces/ILog';
+import { IUpdateToyo } from 'src/models/interfaces/IUpdateToyo';
 
 @Injectable()
 export class ToyoService {
@@ -17,6 +22,8 @@ export class ToyoService {
     private readonly partService: PartService,
     private readonly toyoPersonaService: ToyoPersonaService,
     private readonly onchainService: OnchainService,
+    @Inject(forwardRef(() => ToyoProducerService))
+    private readonly toyoProducerService: ToyoProducerService,
   ) {
     this.ParseServerConfiguration();
   }
@@ -85,7 +92,7 @@ export class ToyoService {
   }
 
   async getToyosByWalletAddress(walletAddress: string): Promise<ToyoModel[]> {
-    const onChainToyos =
+    const onChainToyos: IBoxOnChain[] =
       await this.onchainService.getTokenOwnerEntityByWalletAndTypeId(
         walletAddress,
         [TypeId.TOYO],
@@ -101,13 +108,15 @@ export class ToyoService {
         toyos.push(await this.ToyoMapper(toyo));
       } else {
         const newToyo = await this.findToyoByTokenId(item.tokenId);
-        if (newToyo.length === 1) {
+        if (newToyo.length >= 1) {
           //TODO Background job to update this new Toyo to Current Player
+          await this.toyoProducerService.updateToyo(walletAddress, newToyo[0]);
           toyos.push(await this.ToyoMapper(newToyo[0]));
         } else {
           console.log('não tem no bd o tokenId: ' + item.tokenId);
           //TODO Background job to save this new Toyo to Current Player
-        }
+          await this.toyoProducerService.saveToyo(item);
+        }   
       }
     }
     return toyos;
@@ -178,6 +187,54 @@ export class ToyoService {
     }
     
     return toyo;
+  }
+  async saveLogToyoCurrentPlayer(onChain: IBoxOnChain): Promise<ILog>{
+
+    try{
+      const Log = Parse.Object.extend("Logs");
+      const log = new Log();
+
+      await log.save({
+        type: 'Error',
+        message: 'Toyo does not exist in off-chain database',
+        data: {
+          tokenId : onChain.tokenId,
+          typeId: onChain.typeId,
+          walletAddress: onChain.currentOwner,
+        }
+      });
+
+      return log;
+    } catch(e){
+      response.status(500).json({
+        error: [e.message],
+      });
+    }
+    
+  }
+  async updateToyoCurrentPlayer(toyoUpdate: IUpdateToyo):Promise<Parse.Object<Parse.Attributes>>{
+    try {
+      const Player = Parse.Object.extend("Players");
+      const playerQuery = new Parse.Query(Player);
+      playerQuery.equalTo('walletAddress', toyoUpdate.wallet);
+      const player = await playerQuery.find();
+
+      const Toyo = Parse.Object.extend("Toyo");
+      const toyoQuery = new Parse.Query(Toyo);
+      toyoQuery.equalTo('tokenId', toyoUpdate.tokenId);
+      const toyo = await toyoQuery.find();
+
+      const ralation = player[0].relation('toyos');
+      ralation.add(toyo[0]);
+
+      await player[0].save();
+
+      return toyo[0];
+    }catch(e){
+      response.status(500).json({
+        error: [e.message],
+      })
+    }
   }
   private async partsMapper(toyoId: string): Promise<PartModel[]> {
     const Toyo = Parse.Object.extend('Toyo');
