@@ -61,8 +61,6 @@
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
     "jest": "28.0.3",
-    "jest-html-reporter": "^3.5.0",
-    "jest-sonar-reporter": "^2.0.0",
     "plugin": "^0.3.3",
     "prettier": "^2.3.2",
     "serverless-offline": "^8.8.0",
