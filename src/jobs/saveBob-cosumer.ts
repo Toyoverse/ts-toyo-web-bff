@@ -18,21 +18,4 @@ export class SaveBoxConsumer{
         const box = await this.boxService.saveBox(data);
         return box;
     }
-    @OnQueueActive()
-    onQueueActive(job: Job){
-        console.log('Queue active');
-    }
-    @OnQueueCompleted()
-    onQueueCompleted(job:Job){
-        console.log("Queue completed");
-    }
-    @OnQueueFailed()
-    onQueueFailed(job:Job){
-        console.log('Queue failed');
-    }
-
-    @OnQueueError()
-    onQueueError(job: Job){
-        console.log('Queue error')
-    }
 }

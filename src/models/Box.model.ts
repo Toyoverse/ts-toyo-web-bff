@@ -9,6 +9,7 @@ import { Parts } from './interfaces/Part';
 import PartModel from './Part.model';
 
 export default class BoxModel implements Box {
+  @ApiProperty()
   private objectId?: string;
   @ApiProperty()
   type: string;
