@@ -109,14 +109,15 @@ export class ToyoService {
       } else {
         const newToyo = await this.findToyoByTokenId(item.tokenId);
         if (newToyo.length >= 1) {
-          //TODO Background job to update this new Toyo to Current Player
-          await this.toyoProducerService.updateToyo(walletAddress, newToyo[0]);
+          console.log(JSON.stringify(newToyo));
+          // console.log('vou ter que chamar um background: ' + item.tokenId);
+          // await this.toyoProducerService.updateToyo(walletAddress, newToyo[0]);
           toyos.push(await this.ToyoMapper(newToyo[0]));
         } else {
           console.log('não tem no bd o tokenId: ' + item.tokenId);
           //TODO Background job to save this new Toyo to Current Player
-          await this.toyoProducerService.saveToyo(item);
-        }   
+          // await this.toyoProducerService.saveToyo(item);
+        }
       }
     }
     return toyos;
@@ -157,7 +158,7 @@ export class ToyoService {
 
       toyo.parts = partsArray;
     }
-    
+
     return toyo;
   }
   async ToyoMapperWithOutIdCreatedUpdated(
@@ -185,41 +186,41 @@ export class ToyoService {
 
       toyo.parts = partsArray;
     }
-    
+
     return toyo;
   }
-  async saveLogToyoCurrentPlayer(onChain: IBoxOnChain): Promise<ILog>{
-
-    try{
-      const Log = Parse.Object.extend("Logs");
+  async saveLogToyoCurrentPlayer(onChain: IBoxOnChain): Promise<ILog> {
+    try {
+      const Log = Parse.Object.extend('Logs');
       const log = new Log();
 
       await log.save({
         type: 'Error',
         message: 'Toyo does not exist in off-chain database',
         data: {
-          tokenId : onChain.tokenId,
+          tokenId: onChain.tokenId,
           typeId: onChain.typeId,
           walletAddress: onChain.currentOwner,
-        }
+        },
       });
 
       return log;
-    } catch(e){
+    } catch (e) {
       response.status(500).json({
         error: [e.message],
       });
     }
-    
   }
-  async updateToyoCurrentPlayer(toyoUpdate: IUpdateToyo):Promise<Parse.Object<Parse.Attributes>>{
+  async updateToyoCurrentPlayer(
+    toyoUpdate: IUpdateToyo,
+  ): Promise<Parse.Object<Parse.Attributes>> {
     try {
-      const Player = Parse.Object.extend("Players");
+      const Player = Parse.Object.extend('Players');
       const playerQuery = new Parse.Query(Player);
       playerQuery.equalTo('walletAddress', toyoUpdate.wallet);
       const player = await playerQuery.find();
 
-      const Toyo = Parse.Object.extend("Toyo");
+      const Toyo = Parse.Object.extend('Toyo');
       const toyoQuery = new Parse.Query(Toyo);
       toyoQuery.equalTo('tokenId', toyoUpdate.tokenId);
       const toyo = await toyoQuery.find();
@@ -230,10 +231,10 @@ export class ToyoService {
       await player[0].save();
 
       return toyo[0];
-    }catch(e){
+    } catch (e) {
       response.status(500).json({
         error: [e.message],
-      })
+      });
     }
   }
   private async partsMapper(toyoId: string): Promise<PartModel[]> {

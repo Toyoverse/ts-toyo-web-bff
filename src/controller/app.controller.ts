@@ -53,7 +53,9 @@ export class AppController {
   async getPlayerToyos(@Req() request: Request, @Res() response: Response) {
     try {
       const playerToyos: ToyoModel[] =
-        await this.toyoService.getToyosByWalletAddress(response.locals.walletId);
+        await this.toyoService.getToyosByWalletAddress(
+          response.locals.walletId,
+        );
 
       return response.status(200).json({
         toyos: playerToyos,
