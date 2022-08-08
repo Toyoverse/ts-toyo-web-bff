@@ -16,8 +16,7 @@ import {
   SaveBoxProducerService,
   SaveBoxConsumer,
   ToyoProducerService,
-  ToyoConsumer
-
+  ToyoConsumer,
 } from './service';
 import { Queue } from 'bull';
 import { MiddlewareBuilder } from '@nestjs/core';
@@ -39,6 +38,7 @@ import { BullAdapter } from 'bull-board/bullAdapter';
       redis: {
         host: 'localhost',
         port: 6379,
+        maxRetriesPerRequest: null,
       },
     }),
   ],
@@ -60,7 +60,7 @@ import { BullAdapter } from 'bull-board/bullAdapter';
   ],
 })
 export class AppModule implements NestModule {
-   configure(consumer: MiddlewareConsumer) {
-     consumer.apply(AuthMiddleware).forRoutes(AppController);
-   }
- }
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AuthMiddleware).forRoutes(AppController);
+  }
+}
