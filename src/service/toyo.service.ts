@@ -92,6 +92,7 @@ export class ToyoService {
   }
 
   async getToyosByWalletAddress(walletAddress: string): Promise<ToyoModel[]> {
+    console.log('walletAddress: ' + walletAddress);
     const onChainToyos: IBoxOnChain[] =
       await this.onchainService.getTokenOwnerEntityByWalletAndTypeId(
         walletAddress,
@@ -109,7 +110,6 @@ export class ToyoService {
       } else {
         const newToyo = await this.findToyoByTokenId(item.tokenId);
         if (newToyo.length >= 1) {
-          console.log(JSON.stringify(newToyo));
           // console.log('vou ter que chamar um background: ' + item.tokenId);
           // await this.toyoProducerService.updateToyo(walletAddress, newToyo[0]);
           toyos.push(await this.ToyoMapper(newToyo[0]));

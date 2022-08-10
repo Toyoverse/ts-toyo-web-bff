@@ -8,7 +8,7 @@ import { OnchainService } from './onchain.service';
 import { TypeId } from 'src/enums/SmartContracts';
 import { BoxService } from './box.service';
 import { json } from 'stream/consumers';
-import { SaveBoxProducerService } from '../jobs/saveBox-producer.service'
+import { SaveBoxProducerService } from '../jobs/saveBox-producer.service';
 import { IBoxOnChain } from 'src/models/interfaces/IBoxOnChain';
 import BoxModel from 'src/models/Box.model';
 
@@ -52,62 +52,62 @@ export class EnvironmentService {
 
   async findBoxesByWalletId(walletAddress: string) {
     try {
-    const boxesOnChain:IBoxOnChain[] =
-      await this.onchainService.getTokenOwnerEntityByWalletAndTypeId(
+      const boxesOnChain: IBoxOnChain[] =
+        await this.onchainService.getTokenOwnerEntityByWalletAndTypeId(
+          walletAddress,
+          [
+            TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX,
+            TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX,
+            TypeId.OPEN_JAKANA_SEED_BOX,
+            TypeId.OPEN_KYTUNT_SEED_BOX,
+            TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX,
+            TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX,
+            TypeId.TOYO_KYTUNT_SEED_BOX,
+            TypeId.TOYO_JAKANA_SEED_BOX,
+          ],
+        );
+      const boxesOffChain = await this.boxService.getBoxesByWalletId(
         walletAddress,
-        [
-          TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX,
-          TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX,
-          TypeId.OPEN_JAKANA_SEED_BOX,
-          TypeId.OPEN_KYTUNT_SEED_BOX,
-          TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX,
-          TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX,
-          TypeId.TOYO_KYTUNT_SEED_BOX,
-          TypeId.TOYO_JAKANA_SEED_BOX,
-        ],
       );
-    const boxesOffChain = await this.boxService.getBoxesByWalletId(
-      walletAddress,
-    );
 
-    if (boxesOnChain.length !== boxesOffChain.length) {
-        await this.saveBoxProducerService.saveBox(boxesOffChain, boxesOnChain);
-    }
-    
-  
-    const boxes = []
-
-    for (const box of boxesOnChain){
-      let result = boxesOffChain.find(value => value.tokenId === box.tokenId);
-
-      if (!result){
-        boxes.push({
-          ...box,
-          isOpen: this.boxService.getIsOpen(box.typeId), 
-          lastUnboxingStarted: null,
-          modifiers: this.boxService.getModifiers(box.typeId),
-          type: this.boxService.getType(box.typeId),
-          region: this.boxService.getRegion(box.typeId)
-        });
+      if (boxesOnChain.length !== boxesOffChain.length) {
+        // await this.saveBoxProducerService.saveBox(boxesOffChain, boxesOnChain);
       }
-      else {
-        boxes.push({
-          ...result,
-          currentOwner: walletAddress,
-        });
-      }
-    }
 
-    return {
-      wallet: walletAddress,
-      boxes: boxes,
-    };
-  } catch (error) {
-    response.status(500).json({
-      error: [error.message],
-    });
+      const boxes = [];
+
+      for (const box of boxesOnChain) {
+        let result = boxesOffChain.find(
+          (value) => value.tokenId === box.tokenId,
+        );
+
+        if (!result) {
+          boxes.push({
+            ...box,
+            isOpen: this.boxService.getIsOpen(box.typeId),
+            lastUnboxingStarted: null,
+            modifiers: this.boxService.getModifiers(box.typeId),
+            type: this.boxService.getType(box.typeId),
+            region: this.boxService.getRegion(box.typeId),
+          });
+        } else {
+          boxes.push({
+            ...result,
+            currentOwner: walletAddress,
+          });
+        }
+      }
+
+      return {
+        wallet: walletAddress,
+        boxes: boxes,
+      };
+    } catch (error) {
+      response.status(500).json({
+        error: [error.message],
+      });
+    }
   }
-  } 
 
   /**
    * Function to configure ParseSDK
