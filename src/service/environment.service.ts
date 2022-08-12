@@ -8,7 +8,6 @@ import { OnchainService } from './onchain.service';
 import { TypeId } from 'src/enums/SmartContracts';
 import { BoxService } from './box.service';
 import { json } from 'stream/consumers';
-import { SaveBoxProducerService } from '../jobs/saveBox-producer.service';
 import { IBoxOnChain } from 'src/models/interfaces/IBoxOnChain';
 import BoxModel from 'src/models/Box.model';
 import { BoxJobProducer } from 'src/jobs/boxJob-producer';
@@ -20,7 +19,6 @@ export class EnvironmentService {
     private readonly playerService: PlayerService,
     private readonly onchainService: OnchainService,
     private readonly boxService: BoxService,
-    private readonly saveBoxProducerService: SaveBoxProducerService,
     private readonly boxJobProducer: BoxJobProducer,
   ) {
     this.ParseServerConfiguration();

@@ -9,11 +9,11 @@ import { OnchainService } from './onchain.service';
 import { TypeId } from 'src/enums/SmartContracts';
 import { IToyo, IToyoPersona } from '../models/interfaces';
 import { ToyoPersonaService } from './toyoPersona.service';
-import { ToyoProducerService } from '../jobs/toyo-producer.service';
 import { IBoxOnChain } from '../models/interfaces/IBoxOnChain';
 import PlayerModel from 'src/models/Player.model';
 import { ILog } from 'src/models/interfaces/ILog';
 import { IUpdateToyo } from 'src/models/interfaces/IUpdateToyo';
+import { ToyoJobProducer } from '.';
 
 @Injectable()
 export class ToyoService {
@@ -22,8 +22,8 @@ export class ToyoService {
     private readonly partService: PartService,
     private readonly toyoPersonaService: ToyoPersonaService,
     private readonly onchainService: OnchainService,
-    @Inject(forwardRef(() => ToyoProducerService))
-    private readonly toyoProducerService: ToyoProducerService,
+    @Inject(forwardRef(() => ToyoJobProducer))
+    private readonly toyoJobProducer: ToyoJobProducer,
   ) {
     this.ParseServerConfiguration();
   }
@@ -111,12 +111,12 @@ export class ToyoService {
         const newToyo = await this.findToyoByTokenId(item.tokenId);
         if (newToyo.length >= 1) {
           // console.log('vou ter que chamar um background: ' + item.tokenId);
-          // await this.toyoProducerService.updateToyo(walletAddress, newToyo[0]);
+          this.toyoJobProducer.updateToyo(walletAddress, newToyo[0]);
           toyos.push(await this.ToyoMapper(newToyo[0]));
         } else {
           console.log('não tem no bd o tokenId: ' + item.tokenId);
           //TODO Background job to save this new Toyo to Current Player
-          // await this.toyoProducerService.saveToyo(item);
+          this.toyoJobProducer.saveToyo(item);
         }
       }
     }
