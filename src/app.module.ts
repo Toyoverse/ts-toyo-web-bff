@@ -22,6 +22,9 @@ import { Queue } from 'bull';
 import { MiddlewareBuilder } from '@nestjs/core';
 import { createBullBoard } from 'bull-board';
 import { BullAdapter } from 'bull-board/bullAdapter';
+import { BoxJobProducer } from './jobs/boxJob-producer';
+import { BoxJobConsumer } from './jobs/boxJob-cosumer';
+import * as qjobs from 'qjobs'
 
 @Module({
   imports: [
@@ -57,6 +60,8 @@ import { BullAdapter } from 'bull-board/bullAdapter';
     SaveBoxConsumer,
     ToyoProducerService,
     ToyoConsumer,
+    BoxJobProducer,
+    BoxJobConsumer,
   ],
 })
 export class AppModule implements NestModule {

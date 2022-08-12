@@ -11,6 +11,7 @@ import { json } from 'stream/consumers';
 import { SaveBoxProducerService } from '../jobs/saveBox-producer.service'
 import { IBoxOnChain } from 'src/models/interfaces/IBoxOnChain';
 import BoxModel from 'src/models/Box.model';
+import { BoxJobProducer } from 'src/jobs/boxJob-producer';
 
 @Injectable()
 export class EnvironmentService {
@@ -20,6 +21,7 @@ export class EnvironmentService {
     private readonly onchainService: OnchainService,
     private readonly boxService: BoxService,
     private readonly saveBoxProducerService: SaveBoxProducerService,
+    private readonly boxJobProducer: BoxJobProducer,
   ) {
     this.ParseServerConfiguration();
   }
@@ -71,7 +73,7 @@ export class EnvironmentService {
     );
 
     if (boxesOnChain.length !== boxesOffChain.length) {
-        await this.saveBoxProducerService.saveBox(boxesOffChain, boxesOnChain);
+        this.boxJobProducer.saveBox(boxesOffChain, boxesOnChain);
     }
     
   
