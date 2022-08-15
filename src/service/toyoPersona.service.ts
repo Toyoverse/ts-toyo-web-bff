@@ -39,6 +39,8 @@ export class ToyoPersonaService {
     const toyoPersona: ToyoPersona = new ToyoPersona();
     toyoPersona.objectId = result.id;
     toyoPersona.name = result.get('name');
+    toyoPersona.rarityId = result.get('rarityId');
+    toyoPersona.rarity = result.get('rarity');
     toyoPersona.thumbnail = result.get('thumbnail');
     toyoPersona.video = result.get('video');
     toyoPersona.bodyType = result.get('bodyType');
