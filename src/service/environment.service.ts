@@ -8,9 +8,9 @@ import { OnchainService } from './onchain.service';
 import { TypeId } from 'src/enums/SmartContracts';
 import { BoxService } from './box.service';
 import { json } from 'stream/consumers';
-import { SaveBoxProducerService } from '../jobs/saveBox-producer.service';
 import { IBoxOnChain } from 'src/models/interfaces/IBoxOnChain';
 import BoxModel from 'src/models/Box.model';
+import { BoxJobProducer } from 'src/jobs/boxJob-producer';
 
 @Injectable()
 export class EnvironmentService {
@@ -19,7 +19,7 @@ export class EnvironmentService {
     private readonly playerService: PlayerService,
     private readonly onchainService: OnchainService,
     private readonly boxService: BoxService,
-    private readonly saveBoxProducerService: SaveBoxProducerService,
+    private readonly boxJobProducer: BoxJobProducer,
   ) {
     this.ParseServerConfiguration();
   }
@@ -70,33 +70,33 @@ export class EnvironmentService {
         walletAddress,
       );
 
-      if (boxesOnChain.length !== boxesOffChain.length) {
-        // await this.saveBoxProducerService.saveBox(boxesOffChain, boxesOnChain);
+    if (boxesOnChain.length !== boxesOffChain.length) {
+       this.boxJobProducer.saveBox(boxesOffChain, boxesOnChain);
+    }
+    
+  
+    const boxes = []
+
+    for (const box of boxesOnChain){
+      let result = boxesOffChain.find(value => value.tokenId === box.tokenId);
+
+      if (!result){
+        boxes.push({
+          ...box,
+          isOpen: this.boxService.getIsOpen(box.typeId), 
+          lastUnboxingStarted: null,
+          modifiers: this.boxService.getModifiers(box.typeId),
+          type: this.boxService.getType(box.typeId),
+          region: this.boxService.getRegion(box.typeId)
+        });
       }
-
-      const boxes = [];
-
-      for (const box of boxesOnChain) {
-        let result = boxesOffChain.find(
-          (value) => value.tokenId === box.tokenId,
-        );
-
-        if (!result) {
-          boxes.push({
-            ...box,
-            isOpen: this.boxService.getIsOpen(box.typeId),
-            lastUnboxingStarted: null,
-            modifiers: this.boxService.getModifiers(box.typeId),
-            type: this.boxService.getType(box.typeId),
-            region: this.boxService.getRegion(box.typeId),
-          });
-        } else {
-          boxes.push({
-            ...result,
-            currentOwner: walletAddress,
-          });
-        }
+      else {
+        boxes.push({
+          ...result,
+          currentOwner: walletAddress,
+        });
       }
+    }
 
       return {
         wallet: walletAddress,

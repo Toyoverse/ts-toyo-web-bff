@@ -1,6 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { BullModule, InjectQueue } from '@nestjs/bull';
 import { AppController } from './controller/app.controller';
 import { AuthMiddleware } from './middlewares/auth.middleware';
 import {
@@ -13,33 +12,19 @@ import {
   ToyoPersonaService,
   OnchainService,
   ToyoRegionService,
-  SaveBoxProducerService,
-  SaveBoxConsumer,
-  ToyoProducerService,
-  ToyoConsumer,
+  BoxJobConsumer,
+  BoxJobProducer,
+  ToyoJobConsumer,
+  ToyoJobProducer,
 } from './service';
 import { Queue } from 'bull';
 import { MiddlewareBuilder } from '@nestjs/core';
-import { createBullBoard } from 'bull-board';
-import { BullAdapter } from 'bull-board/bullAdapter';
+import * as qjobs from 'qjobs'
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       cache: true,
-    }),
-    BullModule.registerQueue({
-      name: 'saveBox-queue',
-    }),
-    BullModule.registerQueue({
-      name: 'toyo-queue',
-    }),
-    BullModule.forRoot({
-      redis: {
-        host: 'localhost',
-        port: 6379,
-        maxRetriesPerRequest: null,
-      },
     }),
   ],
   controllers: [AppController],
@@ -53,10 +38,10 @@ import { BullAdapter } from 'bull-board/bullAdapter';
     CardService,
     ToyoService,
     ToyoRegionService,
-    SaveBoxProducerService,
-    SaveBoxConsumer,
-    ToyoProducerService,
-    ToyoConsumer,
+    BoxJobProducer,
+    BoxJobConsumer,
+    ToyoJobProducer,
+    ToyoJobConsumer,
   ],
 })
 export class AppModule implements NestModule {
