@@ -165,8 +165,9 @@ export class BoxService {
 
     relationPlayerBoxes.add(box);
     await player[0].save();
-
-    return box;
+    
+    const boxOff = await this.BoxMapper(box);
+    return boxOff;
   } catch(e){
     response.status(500).json({
       error: [e.message],
