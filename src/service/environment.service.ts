@@ -71,10 +71,16 @@ export class EnvironmentService {
       );
 
     if (boxesOnChain.length !== boxesOffChain.length) {
-       this.boxJobProducer.saveBox(boxesOffChain, boxesOnChain);
-    }
-    
+       //this.boxJobProducer.saveBox(boxesOffChain, boxesOnChain);
+      for(const box of boxesOnChain){
+        const result = boxesOffChain.find(value => value.tokenId === box.tokenId);
   
+        if (!result){
+          const boxOff = await this.boxService.saveBox(box);
+          boxesOffChain.push(boxOff);
+        }
+      }
+    }
     const boxes = []
 
     for (const box of boxesOnChain){
