@@ -119,15 +119,17 @@ export class BoxService {
       const toyoQuery = new Parse.Query(Toyo);
       toyoQuery.equalTo('tokenId', boxToyo.toTokenId);
       toyo = await toyoQuery.include('parts').find();
+      if (toyo.length >=1 ){
 
-      parts = await toyo[0].relation('parts').query().find();
+        parts = await toyo[0].relation('parts').query().find();
     
-      box.set("toyo",isOpen
-      ? toyo[0]
-      : undefined);
+        box.set("toyo",isOpen
+          ? toyo[0]
+          : undefined);
       
-      const relation = box.relation('parts');
-      relation.add(parts);
+        const relation = box.relation('parts');
+        relation.add(parts);
+      }
     }
 
     await box.save({
