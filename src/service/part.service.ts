@@ -59,6 +59,9 @@ export class PartService {
       ? this.toyoPersonaService.ToyoPersonaMapper(result.get('toyoPersona'))
       : undefined;
     part.toyoPiece = result.get('toyoPiece');
+    part.rarityId = result.get('rarityId');
+    part.rarity = result.get('rarity');
+    part.level = result.get('level');
     part.stats = result.get('stats');
     part.createdAt = result.get('createdAt');
     part.updateAt = result.get('updatedAt');
@@ -77,6 +80,9 @@ export class PartService {
       ? this.toyoPersonaService.ToyoPersonaMapper(result.get('toyoPersona'))
       : undefined;
     part.toyoPiece = result.get('toyoPiece');
+    part.rarityId = result.get('rarityId');
+    part.rarity = result.get('rarity');
+    part.level = result.get('level');
     part.stats = result.get('stats');
     part.createdAt = result.get('createdAt');
     part.updateAt = result.get('updatedAt');

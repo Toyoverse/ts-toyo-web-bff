@@ -9,6 +9,9 @@ export default class PartModel implements Parts{
     cards: CardModel[];
     toyoPersona: ToyoPersonaModel;
     toyoPiece: string;
+    rarityId: string;
+    rarity: string;
+    level: number;
     stats: object;
     createdAt: Date;
     updateAt: Date;
