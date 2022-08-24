@@ -70,39 +70,42 @@ export class EnvironmentService {
         walletAddress,
       );
 
-    if (boxesOnChain.length !== boxesOffChain.length) {
-       //this.boxJobProducer.saveBox(boxesOffChain, boxesOnChain);
-      for(const box of boxesOnChain){
-        const result = boxesOffChain.find(value => value.tokenId === box.tokenId);
-  
-        if (!result){
-          const boxOff = await this.boxService.saveBox(box);
-          boxesOffChain.push(boxOff);
+      if (boxesOnChain.length !== boxesOffChain.length) {
+        //this.boxJobProducer.saveBox(boxesOffChain, boxesOnChain);
+        for (const box of boxesOnChain) {
+          const result = boxesOffChain.find(
+            (value) => value.tokenId === box.tokenId,
+          );
+
+          if (!result) {
+            const boxOff = await this.boxService.saveBox(box);
+            boxesOffChain.push(boxOff);
+          }
         }
       }
-    }
-    const boxes = []
+      const boxes = [];
 
-    for (const box of boxesOnChain){
-      let result = boxesOffChain.find(value => value.tokenId === box.tokenId);
+      for (const box of boxesOnChain) {
+        let result = boxesOffChain.find(
+          (value) => value.tokenId === box.tokenId,
+        );
 
-      if (!result){
-        boxes.push({
-          ...box,
-          isOpen: this.boxService.getIsOpen(box.typeId), 
-          lastUnboxingStarted: null,
-          modifiers: this.boxService.getModifiers(box.typeId),
-          type: this.boxService.getType(box.typeId),
-          region: this.boxService.getRegion(box.typeId)
-        });
+        if (!result) {
+          boxes.push({
+            ...box,
+            isOpen: this.boxService.getIsOpen(box.typeId),
+            lastUnboxingStarted: null,
+            modifiers: this.boxService.getModifiers(box.typeId),
+            type: this.boxService.getType(box.typeId),
+            region: this.boxService.getRegion(box.typeId),
+          });
+        } else {
+          boxes.push({
+            ...result,
+            currentOwner: walletAddress,
+          });
+        }
       }
-      else {
-        boxes.push({
-          ...result,
-          currentOwner: walletAddress,
-        });
-      }
-    }
 
       return {
         wallet: walletAddress,

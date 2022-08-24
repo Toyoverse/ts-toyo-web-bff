@@ -1,0 +1,35 @@
+service: toyo-web-bff
+
+frameworkVersion: '3'
+
+useDotenv: true
+
+plugins:
+  - serverless-dotenv-plugin
+  - serverless-jetpack
+  - serverless-offline
+  - serverless-plugin-optimize
+  - serverless-plugin-warmup
+
+custom:
+  serverless-offline:
+    noPrependStageInUrl: true
+  warmup:
+    default:
+      enabled: true
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: us-east-1
+  deploymentMethod: direct
+  stage: production
+  profile: toyo
+
+functions:
+  api:
+    handler: dist/lambda.handler
+    events:
+      - http:
+          method: any
+          path: /{proxy+}
