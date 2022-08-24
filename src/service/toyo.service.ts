@@ -143,7 +143,7 @@ export class ToyoService {
         boxOpen = boxOn;
       }
     }
-    if(swap.length < 1){
+    if(swap.length >= 1){
       const box = await this.boxService.findBoxByTokenId(boxOpen.fromTokenId);
       const toyoHash = await this.hashBoxService.decryptHash(box.get('toyoHash'));
       const toyoId: string = Buffer.from(toyoHash.id, 'base64').toString('ascii');
