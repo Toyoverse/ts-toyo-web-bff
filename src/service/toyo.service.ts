@@ -13,7 +13,8 @@ import { IBoxOnChain } from '../models/interfaces/IBoxOnChain';
 import PlayerModel from 'src/models/Player.model';
 import { ILog } from 'src/models/interfaces/ILog';
 import { IUpdateToyo } from 'src/models/interfaces/IUpdateToyo';
-import { ToyoJobProducer } from '.';
+import { BoxService, HashBoxService, ToyoJobProducer } from '.';
+import { ISwappedEntities } from 'src/models/interfaces/ISwappedEntities';
 
 @Injectable()
 export class ToyoService {
@@ -24,6 +25,10 @@ export class ToyoService {
     private readonly onchainService: OnchainService,
     @Inject(forwardRef(() => ToyoJobProducer))
     private readonly toyoJobProducer: ToyoJobProducer,
+    @Inject(forwardRef(() => BoxService))
+    private readonly boxService: BoxService,
+    @Inject(forwardRef(() => HashBoxService))
+    private readonly hashBoxService: HashBoxService,
   ) {
     this.ParseServerConfiguration();
   }
@@ -114,9 +119,7 @@ export class ToyoService {
           this.toyoJobProducer.updateToyo(walletAddress, newToyo[0]);
           toyos.push(await this.ToyoMapper(newToyo[0]));
         } else {
-          console.log('não tem no bd o tokenId: ' + item.tokenId);
-          //TODO Background job to save this new Toyo to Current Player
-          this.toyoJobProducer.saveToyo(item);
+          this.toyoJobProducer.updateToyoSwap(walletAddress, item.transactionHash);
         }
       }
     }
@@ -128,6 +131,40 @@ export class ToyoService {
     const toyo: ToyoModel = await this.findToyoById(toyoId);
 
     return toyo;
+  }
+  async getToyoSwap(walletId: string, transactionHash:string) :Promise<Parse.Object<Parse.Attributes>[]>{
+    let boxToyo: ISwappedEntities;
+    let boxOpen: ISwappedEntities; 
+    const swap = await this.onchainService.getTokenSwappedEntitiesByWalletAndTokenId(walletId, transactionHash);
+    for(const boxOn of swap){
+      if (boxOn.toTypeId == "9"){
+        boxToyo =  boxOn;
+      }else {
+        boxOpen = boxOn;
+      }
+    }
+    if(swap.length >= 1){
+      const box = await this.boxService.findBoxByTokenId(boxOpen.fromTokenId);
+      const toyoHash = await this.hashBoxService.decryptHash(box.get('toyoHash'));
+      const toyoId: string = Buffer.from(toyoHash.id, 'base64').toString('ascii');
+      const Toyo = Parse.Object.extend("Toyo");
+      const toyoQuery = new Parse.Query(Toyo);
+      toyoQuery.equalTo('objectId', toyoId);
+      const toyo = await toyoQuery.include('parts').find();
+      const parts = await toyo[0].relation('parts').query().find();
+      const relation = toyo[0].relation('parts');
+      relation.add(parts);
+      toyo[0].set('tokenId', boxToyo.toTokenId);
+      toyo[0].set('transactionHash', transactionHash);
+      await toyo[0].save();
+      return toyo;
+    } else{
+      const toyoLogs: IBoxOnChain ={
+        currentOwner: walletId,
+        transactionHash: transactionHash
+      }
+      this.toyoJobProducer.saveToyo(toyoLogs);
+    }
   }
 
   async ToyoMapper(
@@ -198,8 +235,7 @@ export class ToyoService {
         type: 'Error',
         message: 'Toyo does not exist in off-chain database',
         data: {
-          tokenId: onChain.tokenId,
-          typeId: onChain.typeId,
+          transactionHash: onChain.transactionHash,
           walletAddress: onChain.currentOwner,
         },
       });
@@ -219,15 +255,21 @@ export class ToyoService {
       const playerQuery = new Parse.Query(Player);
       playerQuery.equalTo('walletAddress', toyoUpdate.wallet);
       const player = await playerQuery.find();
+      let toyo: Parse.Object<Parse.Attributes>[];
 
-      const Toyo = Parse.Object.extend('Toyo');
-      const toyoQuery = new Parse.Query(Toyo);
-      toyoQuery.equalTo('tokenId', toyoUpdate.tokenId);
-      const toyo = await toyoQuery.find();
+      if (toyoUpdate.tokenId){
+        const Toyo = Parse.Object.extend('Toyo');
+        const toyoQuery = new Parse.Query(Toyo);
+        toyoQuery.equalTo('tokenId', toyoUpdate.tokenId);
+        toyo = await toyoQuery.find();
+      }
+
+      if(toyoUpdate.transactionHash){
+        toyo = await this.getToyoSwap(toyoUpdate.wallet, toyoUpdate.transactionHash);
+      }
 
       const ralation = player[0].relation('toyos');
       ralation.add(toyo[0]);
-
       await player[0].save();
 
       return toyo[0];

@@ -16,10 +16,10 @@ import {
   BoxJobProducer,
   ToyoJobConsumer,
   ToyoJobProducer,
+  HashBoxService,
 } from './service';
-import { Queue } from 'bull';
-import { MiddlewareBuilder } from '@nestjs/core';
-import * as qjobs from 'qjobs'
+import { AESCrypt } from './utils/crypt/aes-crypt';
+import di from './di';
 
 @Module({
   imports: [
@@ -42,6 +42,8 @@ import * as qjobs from 'qjobs'
     BoxJobConsumer,
     ToyoJobProducer,
     ToyoJobConsumer,
+    HashBoxService,
+    { provide: di.AESCrypt, useClass: AESCrypt },
   ],
 })
 export class AppModule implements NestModule {

@@ -3,16 +3,15 @@ import { ConfigService } from '@nestjs/config';
 import BoxModel from '../models/Box.model';
 import * as Parse from 'parse/node';
 import { response } from 'express';
-import { json } from 'stream/consumers';
 import { PartService } from './part.service';
 import { ToyoService } from './toyo.service';
-import PartModel from 'src/models/Part.model';
 import { TypeId } from 'src/enums/SmartContracts';
 import { ToyoRegionService } from './toyoRegion.service';
 import { PlayerService } from './player.service';
 import { OnchainService } from './onchain.service';
 import { IBoxOnChain } from 'src/models/interfaces/IBoxOnChain';
 import { ISwappedEntities } from 'src/models/interfaces/ISwappedEntities';
+import { HashBoxService } from './hashbox.service';
 
 @Injectable()
 export class BoxService {
@@ -24,6 +23,7 @@ export class BoxService {
     @Inject(forwardRef(() => PlayerService))
     private readonly playerService: PlayerService,
     private readonly onchainService: OnchainService,
+    private readonly hashBoxService: HashBoxService,
   ) {
     this.ParseServerConfiguration();
   }
@@ -119,6 +119,15 @@ export class BoxService {
       const toyoQuery = new Parse.Query(Toyo);
       toyoQuery.equalTo('tokenId', boxToyo.toTokenId);
       toyo = await toyoQuery.include('parts').find();
+
+      if (toyo.length < 1){
+        const boxSwap = await this.findBoxByTokenId(boxOpen.fromTokenId);
+        const toyoHash = await this.hashBoxService.decryptHash(boxSwap.get('toyoHash'));
+        const toyoId: string = Buffer.from(toyoHash.id, 'base64').toString('ascii');
+        const toyoQuery = new Parse.Query(Toyo);
+        toyoQuery.equalTo('objectId', toyoId);
+        toyo = await toyoQuery.include('parts').find();
+      }
       if (toyo.length >=1 ){
 
         parts = await toyo[0].relation('parts').query().find();
@@ -175,6 +184,27 @@ export class BoxService {
       error: [e.message],
     });
   }
+  }
+  async findBoxByTokenId(tokenId: string){
+    const Boxes = Parse.Object.extend('Boxes', BoxModel);
+    const boxesQuery = new Parse.Query(Boxes);
+    boxesQuery.equalTo('tokenId', tokenId);
+
+    try {
+      const result = await boxesQuery.find();
+
+      if (result.length < 1 || result[0].get('tokenId') !== tokenId) {
+        response.status(404).json({
+          erros: ['Box not found!'],
+        });
+      }
+
+      return result[0];
+    } catch (error) {
+      response.status(500).json({
+        error: [error.message],
+      });
+    }
   }
 
   private async BoxMapper(

@@ -16,6 +16,14 @@ export class ToyoJobProducer{
           };
         q.add(this.toyoJobCosumer.updateToyo(toyoUpdate));
     }
+    async updateToyoSwap(walletAddress: string, transactionHash: string ){
+        const q = new qjobs();
+        const toyoUpdate: IUpdateToyo ={
+            wallet: walletAddress,
+            transactionHash: transactionHash
+        }
+        q.add(this.toyoJobCosumer.updateToyo(toyoUpdate));
+    }
 
     async saveToyo(toyo: IBoxOnChain){
         const q = new qjobs();
