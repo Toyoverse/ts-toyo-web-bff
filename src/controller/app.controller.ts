@@ -37,7 +37,8 @@ export class AppController {
           error: ['The informed player does not match the returned player'],
         });
       }
-    } catch {
+    } catch (e) {
+      console.log(e);
       return response.status(500).json({
         errors: ['Error could not return box'],
       });
