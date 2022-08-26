@@ -8,7 +8,7 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
-    "deploy:prod": "sls deploy --stage production --verbose",
+    "deploy:prod": "npm run build && sls deploy --stage production --verbose",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "heroku-postbuild": "npm install && npm run build",
     "start": "node dist/main",
