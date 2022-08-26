@@ -3,7 +3,7 @@ import { configure as serverlessExpress } from '@vendia/serverless-express';
 import { Callback, Context, Handler } from 'aws-lambda';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
-import cors from 'cors';
+import * as cors from 'cors';
 
 let server: Handler;
 
