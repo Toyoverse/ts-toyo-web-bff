@@ -107,9 +107,10 @@ export class ToyoService {
     const offChainToyos = await this.getOffChainToyos(walletAddress);
     const toyos: Array<ToyoModel> = [];
     for (const item of onChainToyos) {
-      const toyo: Parse.Object = offChainToyos.find(
-        (tOff) => tOff.get('tokenId') === item.tokenId,
-      );
+      const toyo: Parse.Object = offChainToyos.find((tOff) => {
+        console.log(tOff.toJSON());
+        return tOff.get('tokenId') === item.tokenId;
+      });
       if (toyo) {
         toyos.push(await this.ToyoMapper(toyo));
       } else {
@@ -134,18 +135,25 @@ export class ToyoService {
 
     return toyo;
   }
-  async getToyoSwap(walletId: string, transactionHash:string) :Promise<Parse.Object<Parse.Attributes>[]>{
+  async getToyoSwap(
+    walletId: string,
+    transactionHash: string,
+  ): Promise<Parse.Object<Parse.Attributes>[]> {
     let boxToyo: ISwappedEntities;
-    let boxOpen: ISwappedEntities; 
-    const swap = await this.onchainService.getTokenSwappedEntitiesByWalletAndTokenId(walletId, transactionHash);
-    for(const boxOn of swap){
-      if (boxOn.toTypeId == "9"){
-        boxToyo =  boxOn;
-      }else {
+    let boxOpen: ISwappedEntities;
+    const swap =
+      await this.onchainService.getTokenSwappedEntitiesByWalletAndTokenId(
+        walletId,
+        transactionHash,
+      );
+    for (const boxOn of swap) {
+      if (boxOn.toTypeId == '9') {
+        boxToyo = boxOn;
+      } else {
         boxOpen = boxOn;
       }
     }
-    if(swap.length >= 1){
+    if (swap.length >= 1) {
       const box = await this.boxService.findBoxByTokenId(boxOpen.fromTokenId);
       const toyoHash = await this.hashBoxService.decryptHash(box.get('toyoHash'));
       const toyoId: string = Buffer.from(toyoHash, 'base64').toString('ascii');
@@ -160,11 +168,11 @@ export class ToyoService {
       toyo[0].set('transactionHash', transactionHash);
       await toyo[0].save();
       return toyo;
-    } else{
-      const toyoLogs: IBoxOnChain ={
+    } else {
+      const toyoLogs: IBoxOnChain = {
         currentOwner: walletId,
-        transactionHash: transactionHash
-      }
+        transactionHash: transactionHash,
+      };
       this.toyoJobProducer.saveToyo(toyoLogs);
       return undefined;
     }
@@ -260,15 +268,18 @@ export class ToyoService {
       const player = await playerQuery.find();
       let toyo: Parse.Object<Parse.Attributes>[];
 
-      if (toyoUpdate.tokenId){
+      if (toyoUpdate.tokenId) {
         const Toyo = Parse.Object.extend('Toyo');
         const toyoQuery = new Parse.Query(Toyo);
         toyoQuery.equalTo('tokenId', toyoUpdate.tokenId);
         toyo = await toyoQuery.find();
       }
 
-      if(toyoUpdate.transactionHash){
-        toyo = await this.getToyoSwap(toyoUpdate.wallet, toyoUpdate.transactionHash);
+      if (toyoUpdate.transactionHash) {
+        toyo = await this.getToyoSwap(
+          toyoUpdate.wallet,
+          toyoUpdate.transactionHash,
+        );
       }
 
       const ralation = player[0].relation('toyos');
