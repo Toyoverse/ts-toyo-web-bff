@@ -70,12 +70,15 @@ export class EnvironmentService {
         walletAddress,
       );
 
+      console.log('boxesOffChain.length ', boxesOffChain.length);
+      console.log('boxesOnChain.length ', boxesOnChain.length);
       if (boxesOnChain.length !== boxesOffChain.length) {
         //this.boxJobProducer.saveBox(boxesOffChain, boxesOnChain);
         for (const box of boxesOnChain) {
-          const result = boxesOffChain.find(
-            (value) => value.tokenId === box.tokenId,
-          );
+          const result = boxesOffChain.find((value) => {
+            console.log('boxesOnChain[]box.tokenId ', box.tokenId);
+            return value.tokenId === box.tokenId;
+          });
 
           if (!result) {
             const boxOff = await this.boxService.saveBox(box);
@@ -86,9 +89,10 @@ export class EnvironmentService {
       const boxes = [];
 
       for (const box of boxesOnChain) {
-        let result = boxesOffChain.find(
-          (value) => value.tokenId === box.tokenId,
-        );
+        const result = boxesOffChain.find((value) => {
+          console.log('boxesOffChain[]value.tokenId ', value.tokenId);
+          return value.tokenId === box.tokenId;
+        });
 
         if (!result) {
           boxes.push({
