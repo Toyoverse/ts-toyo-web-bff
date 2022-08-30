@@ -20,10 +20,8 @@ export class HashBoxService {
     this.secretKey = this.configService.get<string>('PRIVATE_KEY_HASHBOX');
   }
 
-  async decryptHash(hashbox: string): Promise<ToyoModel> {
-    const jsonStr = this.crypt.decrypt(hashbox, this.secretKey);
-    const { id, name } = JSON.parse(jsonStr);
-    return new ToyoModel({ id, name });
+  decryptHash(hashbox: string): string {
+    return this.crypt.decrypt(hashbox, this.secretKey);
   }
 
   /**

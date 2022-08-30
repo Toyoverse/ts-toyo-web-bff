@@ -65,6 +65,7 @@ export class BoxService {
         .limit(500)
         .include('region')
         .include('toyo')
+        .include('parts')
         .include('toyo.toyoPersonaOrigin')
         .find();
 
@@ -129,7 +130,7 @@ export class BoxService {
           const toyoHash = await this.hashBoxService.decryptHash(
             boxSwap.get('toyoHash'),
           );
-          const toyoId: string = Buffer.from(toyoHash.id, 'base64').toString(
+          const toyoId: string = Buffer.from(toyoHash, 'base64').toString(
             'ascii',
           );
           const toyoQuery = new Parse.Query(Toyo);
@@ -228,7 +229,20 @@ export class BoxService {
     box.createdAt = result.get('createdAt');
     box.updateAt = result.get('updatedAt');
 
+    if (box.isOpen && result.get('toyo')) this.saveParts(result);
+
     return box;
+  }
+
+  private async saveParts(result: Parse.Object<Parse.Attributes>){
+    const boxParts = await result.get('parts').query().find();
+    
+    if (boxParts.length < 1){
+      const toyoParts = await result.get('toyo').relation('parts').query().find();
+      const relation = result.relation('parts');
+      relation.add(toyoParts);
+      await result.save();
+    }
   }
 
   getRegion(type): string {
