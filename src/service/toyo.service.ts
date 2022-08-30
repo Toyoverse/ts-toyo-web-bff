@@ -119,7 +119,9 @@ export class ToyoService {
           this.toyoJobProducer.updateToyo(walletAddress, newToyo[0]);
           toyos.push(await this.ToyoMapper(newToyo[0]));
         } else {
-          this.toyoJobProducer.updateToyoSwap(walletAddress, item.transactionHash);
+          const toyoSwap = await this.getToyoSwap(walletAddress, item.transactionHash);
+          if (toyoSwap) toyos.push(await this.ToyoMapper(toyoSwap[0]));
+          //this.toyoJobProducer.updateToyoSwap(walletAddress, item.transactionHash);
         }
       }
     }
@@ -146,7 +148,7 @@ export class ToyoService {
     if(swap.length >= 1){
       const box = await this.boxService.findBoxByTokenId(boxOpen.fromTokenId);
       const toyoHash = await this.hashBoxService.decryptHash(box.get('toyoHash'));
-      const toyoId: string = Buffer.from(toyoHash.id, 'base64').toString('ascii');
+      const toyoId: string = Buffer.from(toyoHash, 'base64').toString('ascii');
       const Toyo = Parse.Object.extend("Toyo");
       const toyoQuery = new Parse.Query(Toyo);
       toyoQuery.equalTo('objectId', toyoId);
@@ -164,6 +166,7 @@ export class ToyoService {
         transactionHash: transactionHash
       }
       this.toyoJobProducer.saveToyo(toyoLogs);
+      return undefined;
     }
   }
 
