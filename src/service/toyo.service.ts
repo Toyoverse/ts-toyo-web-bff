@@ -164,9 +164,14 @@ export class ToyoService {
         const toyoHash = await this.hashBoxService.decryptHash(
           box.get('toyoHash'),
         );
-        const toyoId: string = Buffer.from(toyoHash, 'base64').toString(
-          'ascii',
-        );
+        let toyoId: string;
+        //in dev, toyoId has name on it:
+        const position = toyoHash.search('name');
+        if (position > 0) {
+          toyoId = JSON.parse(toyoHash).id;
+        } else {
+          toyoId = toyoHash;
+        }
         const Toyo = Parse.Object.extend('Toyo');
         const toyoQuery = new Parse.Query(Toyo);
         toyoQuery.equalTo('objectId', toyoId);
