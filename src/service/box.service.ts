@@ -176,7 +176,7 @@ export class BoxService {
 
       const relationPlayerBoxes = player[0].relation('boxes');
 
-      if (toyo) {
+      if (toyo.length > 0) {
         const ralationPlayerToyos = player[0].relation('toyos');
         const ralationPlayerToyoParts = player[0].relation('toyoParts');
         ralationPlayerToyos.add(toyo);
