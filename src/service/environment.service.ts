@@ -11,6 +11,7 @@ import { json } from 'stream/consumers';
 import { IBoxOnChain } from 'src/models/interfaces/IBoxOnChain';
 import BoxModel from 'src/models/Box.model';
 import { BoxJobProducer } from 'src/jobs/boxJob-producer';
+import { valueFromAST } from 'graphql';
 
 @Injectable()
 export class EnvironmentService {
@@ -70,34 +71,17 @@ export class EnvironmentService {
         walletAddress,
       );
 
-      if (boxesOnChain.length !== boxesOffChain.length) {
-        //this.boxJobProducer.saveBox(boxesOffChain, boxesOnChain);
-        for (const box of boxesOnChain) {
-          const result = boxesOffChain.find(
-            (value) => value.tokenId === box.tokenId,
-          );
-
-          if (!result) {
-            const boxOff = await this.boxService.saveBox(box);
-            boxesOffChain.push(boxOff);
-          }
-        }
-      }
       const boxes = [];
-
       for (const box of boxesOnChain) {
-        let result = boxesOffChain.find(
-          (value) => value.tokenId === box.tokenId,
+        const result = boxesOffChain.find(
+          (value) => value.tokenId === box.tokenId && value.typeId === box.typeId,
         );
 
         if (!result) {
+          const boxOff = await this.boxService.saveBox(box);
           boxes.push({
-            ...box,
-            isOpen: this.boxService.getIsOpen(box.typeId),
-            lastUnboxingStarted: null,
-            modifiers: this.boxService.getModifiers(box.typeId),
-            type: this.boxService.getType(box.typeId),
-            region: this.boxService.getRegion(box.typeId),
+            boxOff,
+            currentOwner: walletAddress,
           });
         } else {
           boxes.push({
