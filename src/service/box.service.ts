@@ -84,7 +84,9 @@ export class BoxService {
   async saveBox(boxOn: IBoxOnChain): Promise<BoxModel> {
     try {
       const Box = Parse.Object.extend('Boxes');
-      const box = new Box();
+      const boxQuery = new Parse.Query(Box);
+      boxQuery.equalTo("tokenId", boxOn.tokenId);
+      const box = await boxQuery.first() ? await boxQuery.first(): new Box();
 
       const Region = Parse.Object.extend('ToyoRegion');
       const regionQuery = new Parse.Query(Region);
