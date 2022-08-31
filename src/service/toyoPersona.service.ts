@@ -18,7 +18,7 @@ export class ToyoPersonaService {
     try {
       const result = await toyoPersonaQuery.find();
       if (result.length < 1 || result[0].id !== id) {
-        response.status(404).json({
+        response.status(404).send({
           erros: ['Toyo persona not found!'],
         });
       }
@@ -27,15 +27,13 @@ export class ToyoPersonaService {
 
       return toyo;
     } catch (error) {
-      response.status(500).json({
+      response.status(500).send({
         error: [error.message],
       });
     }
   }
 
-  ToyoPersonaMapper(
-    result: Parse.Object<Parse.Attributes>,
-  ): ToyoPersona {
+  ToyoPersonaMapper(result: Parse.Object<Parse.Attributes>): ToyoPersona {
     const toyoPersona: ToyoPersona = new ToyoPersona();
     toyoPersona.objectId = result.id;
     toyoPersona.name = result.get('name');

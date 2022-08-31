@@ -37,7 +37,7 @@ export class BoxService {
       const result = await boxesQuery.find();
 
       if (result.length < 1 || result[0].id !== id) {
-        response.status(404).json({
+        response.status(404).send({
           erros: ['Box not found!'],
         });
       }
@@ -46,7 +46,7 @@ export class BoxService {
 
       return box;
     } catch (error) {
-      response.status(500).json({
+      response.status(500).send({
         error: [error.message],
       });
     }
@@ -76,7 +76,7 @@ export class BoxService {
 
       return boxesOffChain;
     } catch (error) {
-      response.status(500).json({
+      response.status(500).send({
         error: [error.message],
       });
     }
@@ -85,8 +85,10 @@ export class BoxService {
     try {
       const Box = Parse.Object.extend('Boxes');
       const boxQuery = new Parse.Query(Box);
-      boxQuery.equalTo("tokenId", boxOn.tokenId);
-      const box = await boxQuery.first() ? await boxQuery.first(): new Box();
+      boxQuery.equalTo('tokenId', boxOn.tokenId);
+      let box = await boxQuery.first();
+
+      if (!box) box = new Box();
 
       const Region = Parse.Object.extend('ToyoRegion');
       const regionQuery = new Parse.Query(Region);
@@ -95,7 +97,7 @@ export class BoxService {
 
       const Player = Parse.Object.extend('Players');
       const playerQuery = new Parse.Query(Player);
-      playerQuery.equalTo('walletAddress', boxOn.currentOwner);
+      playerQuery.equalTo('walletAddress', boxOn.currentOwner.toLowerCase());
       const player = await playerQuery.find();
 
       const type = this.getType(boxOn.typeId);
@@ -128,17 +130,25 @@ export class BoxService {
         toyo = await toyoQuery.include('parts').find();
 
         if (toyo.length < 1) {
-          const boxSwap = await this.findBoxByTokenId(boxOpen.fromTokenId);
-          const toyoHash = await this.hashBoxService.decryptHash(
-            boxSwap.get('toyoHash'),
+          const boxSwap = await this.findBoxByTokenId(
+            boxOpen.fromTokenId,
+            false,
           );
-          const toyoId: string = Buffer.from(toyoHash, 'base64').toString(
-            'ascii',
-          );
-          const toyoQuery = new Parse.Query(Toyo);
-          toyoQuery.equalTo('objectId', toyoId);
-          toyo = await toyoQuery.include('parts').find();
+          if (boxSwap) {
+            const toyoHash = await this.hashBoxService.decryptHash(
+              boxSwap.get('toyoHash'),
+            );
+            const toyoId: string = Buffer.from(toyoHash, 'base64').toString(
+              'ascii',
+            );
+            const toyoQuery = new Parse.Query(Toyo);
+            toyoQuery.equalTo('objectId', toyoId);
+            toyo = await toyoQuery.include('parts').find();
+          } else {
+            return undefined;
+          }
         }
+
         if (toyo.length >= 1) {
           parts = await toyo[0].relation('parts').query().find();
 
@@ -179,12 +189,13 @@ export class BoxService {
       const boxOff = await this.BoxMapper(box);
       return boxOff;
     } catch (e) {
-      response.status(500).json({
+      console.log(e);
+      response.status(500).send({
         error: [e.message],
       });
     }
   }
-  async findBoxByTokenId(tokenId: string) {
+  async findBoxByTokenId(tokenId: string, shouldReturnRes: boolean = true) {
     const Boxes = Parse.Object.extend('Boxes', BoxModel);
     const boxesQuery = new Parse.Query(Boxes);
     boxesQuery.equalTo('tokenId', tokenId);
@@ -192,15 +203,18 @@ export class BoxService {
     try {
       const result = await boxesQuery.find();
 
-      if (result.length < 1 || result[0].get('tokenId') !== tokenId) {
-        response.status(404).json({
-          erros: ['Box not found!'],
-        });
+      if (result.length < 1) {
+        if (shouldReturnRes) {
+          return response.status(404).send({
+            erros: ['Box not found!'],
+          });
+        }
       }
 
       return result[0];
     } catch (error) {
-      response.status(500).json({
+      console.log(error);
+      response.status(500).send({
         error: [error.message],
       });
     }
@@ -236,11 +250,15 @@ export class BoxService {
     return box;
   }
 
-  private async saveParts(result: Parse.Object<Parse.Attributes>){
+  private async saveParts(result: Parse.Object<Parse.Attributes>) {
     const boxParts = await result.get('parts').query().find();
-    
-    if (boxParts.length < 1){
-      const toyoParts = await result.get('toyo').relation('parts').query().find();
+
+    if (boxParts.length < 1) {
+      const toyoParts = await result
+        .get('toyo')
+        .relation('parts')
+        .query()
+        .find();
       const relation = result.relation('parts');
       relation.add(toyoParts);
       await result.save();

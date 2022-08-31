@@ -28,20 +28,20 @@ export class PartService {
       const result = await partQuery.include('toyoPersona').find();
 
       if (result.length < 1 || result[0].id !== id) {
-        response.status(404).json({
+        response.status(404).send({
           erros: ['Part not found!'],
         });
       }
       let part: PartModel;
-      if (isPost){
+      if (isPost) {
         part = await this.PartMapperWithIdDecoded(result[0]);
-      }else{
-       part = await this.PartMapper(result[0]);
+      } else {
+        part = await this.PartMapper(result[0]);
       }
 
       return part;
     } catch (error) {
-      response.status(500).json({
+      response.status(500).send({
         error: [error.message],
       });
     }
@@ -68,7 +68,9 @@ export class PartService {
 
     return part;
   }
-  async PartMapperWithIdDecoded(result: Parse.Object<Parse.Attributes>): Promise<PartModel> {
+  async PartMapperWithIdDecoded(
+    result: Parse.Object<Parse.Attributes>,
+  ): Promise<PartModel> {
     const part: PartModel = new PartModel();
 
     part.objectId = result.id;

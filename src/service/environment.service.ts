@@ -35,7 +35,7 @@ export class EnvironmentService {
       const result = await playerQuery.find();
 
       if (result.length < 1 || result[0].get('walletAddress') !== walletId) {
-        response.status(404).json({
+        response.status(404).send({
           erros: ['Player not found!'],
         });
       }
@@ -45,7 +45,7 @@ export class EnvironmentService {
 
       return player;
     } catch (error) {
-      response.status(500).json({
+      response.status(500).send({
         error: [error.message],
       });
     }
@@ -73,16 +73,18 @@ export class EnvironmentService {
 
       const boxes = [];
       for (const box of boxesOnChain) {
-        const result = boxesOffChain.find(
-          (value) => value.tokenId === box.tokenId && value.typeId === box.typeId,
-        );
+        const result = boxesOffChain.find((value) => {
+          return value.tokenId === box.tokenId && value.typeId === box.typeId;
+        });
 
         if (!result) {
           const boxOff = await this.boxService.saveBox(box);
-          boxes.push({
-            boxOff,
-            currentOwner: walletAddress,
-          });
+          if (boxOff) {
+            boxes.push({
+              boxOff,
+              currentOwner: walletAddress,
+            });
+          }
         } else {
           boxes.push({
             ...result,
@@ -96,7 +98,8 @@ export class EnvironmentService {
         boxes: boxes,
       };
     } catch (error) {
-      response.status(500).json({
+      console.log(error);
+      response.status(500).send({
         error: [error.message],
       });
     }

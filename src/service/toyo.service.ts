@@ -42,7 +42,7 @@ export class ToyoService {
       const result = await toyoQuery.find();
 
       if (result.length < 1 || result[0].id !== id) {
-        response.status(404).json({
+        response.status(404).send({
           erros: ['Toyo not found!'],
         });
         return;
@@ -52,7 +52,7 @@ export class ToyoService {
 
       return toyo;
     } catch (error) {
-      response.status(500).json({
+      response.status(500).send({
         error: [error.message],
       });
     }
@@ -67,7 +67,7 @@ export class ToyoService {
       const result = await toyoQuery.find();
       return result;
     } catch (error) {
-      response.status(500).json({
+      response.status(500).send({
         error: [error.message],
       });
     }
@@ -90,7 +90,7 @@ export class ToyoService {
 
       return toyos;
     } catch (error) {
-      response.status(500).json({
+      response.status(500).send({
         error: [error.message],
       });
     }
@@ -108,7 +108,6 @@ export class ToyoService {
     const toyos: Array<ToyoModel> = [];
     for (const item of onChainToyos) {
       const toyo: Parse.Object = offChainToyos.find((tOff) => {
-        console.log(tOff.toJSON());
         return tOff.get('tokenId') === item.tokenId;
       });
       if (toyo) {
@@ -120,7 +119,10 @@ export class ToyoService {
           this.toyoJobProducer.updateToyo(walletAddress, newToyo[0]);
           toyos.push(await this.ToyoMapper(newToyo[0]));
         } else {
-          const toyoSwap = await this.getToyoSwap(walletAddress, item.transactionHash);
+          const toyoSwap = await this.getToyoSwap(
+            walletAddress,
+            item.transactionHash,
+          );
           if (toyoSwap) toyos.push(await this.ToyoMapper(toyoSwap[0]));
           //this.toyoJobProducer.updateToyoSwap(walletAddress, item.transactionHash);
         }
@@ -154,20 +156,29 @@ export class ToyoService {
       }
     }
     if (swap.length >= 1) {
-      const box = await this.boxService.findBoxByTokenId(boxOpen.fromTokenId);
-      const toyoHash = await this.hashBoxService.decryptHash(box.get('toyoHash'));
-      const toyoId: string = Buffer.from(toyoHash, 'base64').toString('ascii');
-      const Toyo = Parse.Object.extend("Toyo");
-      const toyoQuery = new Parse.Query(Toyo);
-      toyoQuery.equalTo('objectId', toyoId);
-      const toyo = await toyoQuery.include('parts').find();
-      const parts = await toyo[0].relation('parts').query().find();
-      const relation = toyo[0].relation('parts');
-      relation.add(parts);
-      toyo[0].set('tokenId', boxToyo.toTokenId);
-      toyo[0].set('transactionHash', transactionHash);
-      await toyo[0].save();
-      return toyo;
+      const box = await this.boxService.findBoxByTokenId(
+        boxOpen.fromTokenId,
+        false,
+      );
+      if (box) {
+        const toyoHash = await this.hashBoxService.decryptHash(
+          box.get('toyoHash'),
+        );
+        const toyoId: string = Buffer.from(toyoHash, 'base64').toString(
+          'ascii',
+        );
+        const Toyo = Parse.Object.extend('Toyo');
+        const toyoQuery = new Parse.Query(Toyo);
+        toyoQuery.equalTo('objectId', toyoId);
+        const toyo = await toyoQuery.include('parts').find();
+        const parts = await toyo[0].relation('parts').query().find();
+        const relation = toyo[0].relation('parts');
+        relation.add(parts);
+        toyo[0].set('tokenId', boxToyo.toTokenId);
+        toyo[0].set('transactionHash', transactionHash);
+        await toyo[0].save();
+        return toyo;
+      }
     } else {
       const toyoLogs: IBoxOnChain = {
         currentOwner: walletId,
@@ -253,7 +264,7 @@ export class ToyoService {
 
       return log;
     } catch (e) {
-      response.status(500).json({
+      response.status(500).send({
         error: [e.message],
       });
     }
@@ -288,7 +299,7 @@ export class ToyoService {
 
       return toyo[0];
     } catch (e) {
-      response.status(500).json({
+      response.status(500).send({
         error: [e.message],
       });
     }
@@ -309,7 +320,7 @@ export class ToyoService {
       return parts;
     } catch (e) {
       console.log(e);
-      response.status(500).json({
+      response.status(500).send({
         error: [e.message],
       });
     }

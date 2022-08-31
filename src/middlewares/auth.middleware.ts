@@ -15,19 +15,19 @@ export class AuthMiddleware implements NestMiddleware {
     const token = request.headers.authorization;
 
     if (!token) {
-      return response.status(401).json({
+      return response.status(401).send({
         error: ['Token is required!'],
       });
     }
 
     try {
       const data = jwt.verify(token, process.env.TOKEN_SECRET);
-
       const { walletId } = data as TokenPayload;
       response.locals.walletId = walletId;
       next();
     } catch (error) {
-      return response.status(401).json({
+      console.log(error);
+      return response.status(401).send({
         error: ['Token invalid!'],
       });
     }

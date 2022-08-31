@@ -29,17 +29,17 @@ export class AppController {
       );
 
       if (boxes.wallet === response.locals.walletId) {
-        response.status(200).json({
+        response.status(200).send({
           player: boxes,
         });
       } else {
-        return response.status(500).json({
+        return response.status(500).send({
           error: ['The informed player does not match the returned player'],
         });
       }
     } catch (e) {
       console.log(e);
-      return response.status(500).json({
+      return response.status(500).send({
         errors: ['Error could not return box'],
       });
     }
@@ -58,12 +58,12 @@ export class AppController {
           response.locals.walletId,
         );
 
-      return response.status(200).json({
+      return response.status(200).send({
         toyos: playerToyos,
       });
     } catch (e) {
       console.log(e);
-      return response.status(500).json({
+      return response.status(500).send({
         errors: ['Error could not return toyos'],
       });
     }
@@ -81,12 +81,12 @@ export class AppController {
     try {
       const toyo: ToyoModel = await this.toyoService.getToyoById(id);
 
-      return response.status(200).json({
+      return response.status(200).send({
         toyo: toyo,
       });
     } catch (e) {
       console.log(e);
-      return response.status(500).json({
+      return response.status(500).send({
         erros: ['Error could not return toyo'],
       });
     }

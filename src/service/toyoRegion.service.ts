@@ -2,65 +2,66 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as Parse from 'parse/node';
 import { response } from 'express';
-import ToyoRegion from "src/models/ToyoRegion.model";
+import ToyoRegion from 'src/models/ToyoRegion.model';
 import ToyoRegionModel from 'src/models/ToyoRegion.model';
 
 @Injectable()
-export class ToyoRegionService{
-    constructor(private configService: ConfigService) {
-        this.ParseServerConfiguration();
+export class ToyoRegionService {
+  constructor(private configService: ConfigService) {
+    this.ParseServerConfiguration();
+  }
+
+  async findRegionByName(name: string, isPost?: boolean): Promise<ToyoRegion> {
+    const toyoRegion = Parse.Object.extend('ToyoRegion', ToyoRegion);
+    const toyoRegionQuery = new Parse.Query(toyoRegion);
+    toyoRegionQuery.equalTo('name', name);
+
+    try {
+      const result = await toyoRegionQuery.find();
+      if (result.length < 1 || result[0].get('name') !== name) {
+        response.status(404).send({
+          erros: ['Toyo persona not found!'],
+        });
+      }
+      let region: ToyoRegion = this.toyoRegionMapper(result[0]);
+      if (isPost) {
+        region = this.toyoRegionMapperWithIdDecoded(result[0]);
+      } else {
+        region = this.toyoRegionMapper(result[0]);
+      }
+
+      return region;
+    } catch (error) {
+      response.status(500).send({
+        error: [error.message],
+      });
     }
+  }
 
-    async findRegionByName(name: string, isPost?:boolean): Promise<ToyoRegion>{
-      
-        const toyoRegion = Parse.Object.extend('ToyoRegion', ToyoRegion);
-        const toyoRegionQuery = new Parse.Query(toyoRegion);
-        toyoRegionQuery.equalTo('name', name);
-        
-        try {
-            const result = await toyoRegionQuery.find();
-            if (result.length < 1 || result[0].get('name') !== name) {
-              response.status(404).json({
-                erros: ['Toyo persona not found!'],
-              });
-            }
-            let region: ToyoRegion = this.toyoRegionMapper(result[0]);
-            if (isPost){
-              region = this.toyoRegionMapperWithIdDecoded(result[0]);
-            }else{
-              region = this.toyoRegionMapper(result[0]);
-            }
+  private toyoRegionMapper(result: Parse.Object<Parse.Attributes>): ToyoRegion {
+    const region = new ToyoRegionModel();
 
-            return region;
-        } catch (error) {
-            response.status(500).json({
-            error: [error.message],
-            });
-        } 
-      }
+    region.id = result.id;
+    region.name = result.get('name');
+    region.createdAt = result.get('createdAt');
+    region.updatedAt = result.get('updatedAt');
+    region.managedTypes = result.get('managedTypes');
 
-      private toyoRegionMapper(result: Parse.Object<Parse.Attributes>): ToyoRegion{
-        const region = new ToyoRegionModel();
+    return region;
+  }
+  private toyoRegionMapperWithIdDecoded(
+    result: Parse.Object<Parse.Attributes>,
+  ): ToyoRegion {
+    const region = new ToyoRegionModel();
 
-        region.id = result.id;
-        region.name = result.get('name');
-        region.createdAt = result.get('createdAt');
-        region.updatedAt = result.get('updatedAt');
-        region.managedTypes = result.get('managedTypes');
-        
-        return region;
-      }
-      private toyoRegionMapperWithIdDecoded(result: Parse.Object<Parse.Attributes>): ToyoRegion{
-        const region = new ToyoRegionModel();
+    region.objectId = result.id;
+    region.name = result.get('name');
+    region.managedTypes = result.get('managedTypes');
 
-        region.objectId = result.id;
-        region.name = result.get('name');
-        region.managedTypes = result.get('managedTypes');
-        
-        return region;
-      }
+    return region;
+  }
 
-    /**
+  /**
    * Function to configure ParseSDK
    */
   private ParseServerConfiguration(): void {
