@@ -123,7 +123,7 @@ export class BoxService {
         }
       }
 
-      if (boxOnChain) {
+      if (boxToyo) {
         const Toyo = Parse.Object.extend('Toyo');
         const toyoQuery = new Parse.Query(Toyo);
         toyoQuery.equalTo('tokenId', boxToyo.toTokenId);
@@ -166,8 +166,8 @@ export class BoxService {
         isOpen: isOpen,
         modifiers: this.getModifiers(boxOn.typeId),
         type: type,
-        typeIdClosedBox: boxOnChain ? boxOpen.fromTypeId : boxOn.typeId,
-        tokenIdClosedBox: isOpen ? boxOpen.fromTokenId : boxOn.tokenId,
+        typeIdClosedBox: boxOpen ? boxOpen.fromTypeId : boxOn.typeId,
+        tokenIdClosedBox: boxOpen ? boxOpen.fromTokenId : boxOn.tokenId,
         typeIdOpenBox: isOpen ? boxOn.typeId : undefined,
         tokenIdOpenBox: isOpen ? boxOn.tokenId : undefined,
         region: region[0],
@@ -176,7 +176,7 @@ export class BoxService {
 
       const relationPlayerBoxes = player[0].relation('boxes');
 
-      if (toyo.length > 0) {
+      if (toyo && toyo.length > 0) {
         const ralationPlayerToyos = player[0].relation('toyos');
         const ralationPlayerToyoParts = player[0].relation('toyoParts');
         ralationPlayerToyos.add(toyo);
@@ -224,7 +224,9 @@ export class BoxService {
     result: Parse.Object<Parse.Attributes>,
   ): Promise<BoxModel> {
     const box: BoxModel = new BoxModel();
-    box.id = result.id;
+    box.id = result.id
+      ? result.id
+      : undefined;
     box.typeId = result.get('typeId');
     box.type = result.get('type')
       ? result.get('type')
@@ -282,11 +284,10 @@ export class BoxService {
       return 'KYTUNT';
     }
   }
-  getModifiers(type) {
+  getModifiers(type:string ) {
     const key: number = parseInt(type, 10);
     switch (key) {
-      case TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX ||
-        TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX:
+      case TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX:
         return [
           {
             name: 'Fortified',
@@ -305,7 +306,26 @@ export class BoxService {
           },
         ];
         break;
-      case TypeId.TOYO_JAKANA_SEED_BOX || TypeId.OPEN_JAKANA_SEED_BOX:
+        case TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX:
+        return [
+          {
+            name: 'Fortified',
+            type: '1',
+            description: 'Increases minimum rarity to be 3 or higher.',
+            modification: '1',
+          },
+          {
+            name: 'Jakana',
+            type: '4',
+            description: 'Contain only Classic Jakana Toyoparts.',
+            modification: {
+              theme: 'Classic',
+              region: 'Jakana',
+            },
+          },
+        ];
+        break;
+      case TypeId.TOYO_JAKANA_SEED_BOX:
         return [
           {
             name: 'Jakana',
@@ -318,8 +338,20 @@ export class BoxService {
           },
         ];
         break;
-      case TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX ||
-        TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX:
+        case TypeId.OPEN_JAKANA_SEED_BOX:
+        return [
+          {
+            name: 'Jakana',
+            type: '4',
+            description: 'Contain only Classic Jakana Toyoparts.',
+            modification: {
+              theme: 'Classic',
+              region: 'Jakana',
+            },
+          },
+        ];
+        break;
+      case TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX:
         return [
           {
             name: 'Fortified',
@@ -339,7 +371,41 @@ export class BoxService {
           },
         ];
         break;
-      case TypeId.TOYO_KYTUNT_SEED_BOX || TypeId.OPEN_KYTUNT_SEED_BOX:
+        case TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX:
+        return [
+          {
+            name: 'Fortified',
+            type: '1',
+            description: 'Increases minimum rarity to be 3 or higher.',
+            modification: '1',
+          },
+          {
+            name: 'Kytunt',
+            type: '4',
+            description: 'Contain only Classic Kytunt Toyoparts.',
+            restrictions: 'Available only until 2022-12-31',
+            modification: {
+              theme: 'Classic',
+              region: 'Kytunt',
+            },
+          },
+        ];
+        break;
+      case TypeId.TOYO_KYTUNT_SEED_BOX:
+        return [
+          {
+            name: 'Kytunt',
+            type: '4',
+            description: 'Contain only Classic Kytunt Toyoparts.',
+            restrictions: 'Available only until 2022-12-31',
+            modification: {
+              theme: 'Classic',
+              region: 'Kytunt',
+            },
+          },
+        ];
+        break;
+        case TypeId.OPEN_KYTUNT_SEED_BOX:
         return [
           {
             name: 'Kytunt',
