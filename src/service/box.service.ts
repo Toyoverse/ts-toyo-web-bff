@@ -159,20 +159,20 @@ export class BoxService {
         }
       }
 
-      await box.save({
-        transactionHash: boxOn.transactionHash,
-        tokenId: boxOn.tokenId,
-        typeId: boxOn.typeId,
-        isOpen: isOpen,
-        modifiers: this.getModifiers(boxOn.typeId),
-        type: type,
-        typeIdClosedBox: boxOpen ? boxOpen.fromTypeId : boxOn.typeId,
-        tokenIdClosedBox: boxOpen ? boxOpen.fromTokenId : boxOn.tokenId,
-        typeIdOpenBox: isOpen ? boxOn.typeId : undefined,
-        tokenIdOpenBox: isOpen ? boxOn.tokenId : undefined,
-        region: region[0],
-        player: player[0],
-      });
+      box.set("transactionHash", boxOn.transactionHash);
+      box.set("tokenId" , boxOn.tokenId);
+      box.set("typeId" , boxOn.typeId);
+      box.set("isOpen" , isOpen);
+      box.set("modifiers" , this.getModifiers(boxOn.typeId));
+      box.set("type" , type);
+      box.set("typeIdClosedBox" , boxOpen ? boxOpen.fromTypeId : boxOn.typeId);
+      box.set("tokenIdClosedBox" , boxOpen ? boxOpen.fromTokenId : boxOn.tokenId);
+      box.set("typeIdOpenBox" , isOpen ? boxOn.typeId : undefined);
+      box.set("tokenIdOpenBox" , isOpen ? boxOn.tokenId : undefined);
+      box.set("region" , region[0]);
+      box.set("player" , player[0]);
+
+      await box.save();
 
       const relationPlayerBoxes = player[0].relation('boxes');
 
