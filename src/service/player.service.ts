@@ -17,6 +17,7 @@ export class PlayerService {
     private configService: ConfigService,
     @Inject(forwardRef(() => BoxService))
     private readonly boxService: BoxService,
+    @Inject(forwardRef(() => BoxService))
     private readonly toyoService: ToyoService,
     private readonly partService: PartService,
   ) {
@@ -37,6 +38,20 @@ export class PlayerService {
 
     return player;
   }
+
+  async getPlayerByWalletAddress(walletAddress: string): Promise<Parse.Object> {
+    const Players = Parse.Object.extend('Players');
+    const playerQuery = new Parse.Query(Players);
+    playerQuery.equalTo('walletAddress', walletAddress);
+
+    try {
+      const result = await playerQuery.find();
+      return result[0];
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   async findPlayerByWalletId(
     walletId: string,
     isPost?: boolean,

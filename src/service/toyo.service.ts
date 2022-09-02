@@ -4,13 +4,12 @@ import ToyoModel from '../models/Toyo.model';
 import * as Parse from 'parse/node';
 import { response } from 'express';
 import PartModel from 'src/models/Part.model';
+import { PlayerService } from './player.service';
 import { PartService } from './part.service';
 import { OnchainService } from './onchain.service';
 import { TypeId } from 'src/enums/SmartContracts';
-import { IToyo, IToyoPersona } from '../models/interfaces';
 import { ToyoPersonaService } from './toyoPersona.service';
 import { IBoxOnChain } from '../models/interfaces/IBoxOnChain';
-import PlayerModel from 'src/models/Player.model';
 import { ILog } from 'src/models/interfaces/ILog';
 import { IUpdateToyo } from 'src/models/interfaces/IUpdateToyo';
 import { BoxService, HashBoxService, ToyoJobProducer } from '.';
@@ -29,6 +28,8 @@ export class ToyoService {
     private readonly boxService: BoxService,
     @Inject(forwardRef(() => HashBoxService))
     private readonly hashBoxService: HashBoxService,
+    @Inject(forwardRef(() => PlayerService))
+    private readonly playerService: PlayerService,
   ) {
     this.ParseServerConfiguration();
   }
@@ -90,6 +91,7 @@ export class ToyoService {
 
       return toyos;
     } catch (error) {
+      console.log(error);
       response.status(500).send({
         error: [error.message],
       });
@@ -115,9 +117,11 @@ export class ToyoService {
       } else {
         const newToyo = await this.findToyoByTokenId(item.tokenId);
         if (newToyo.length >= 1) {
-          // console.log('vou ter que chamar um background: ' + item.tokenId);
-          this.toyoJobProducer.updateToyo(walletAddress, newToyo[0]);
-          toyos.push(await this.ToyoMapper(newToyo[0]));
+          const toyoUpdated = await this.updateToyoWallet(
+            walletAddress,
+            newToyo[0],
+          );
+          if (toyoUpdated) toyos.push(await this.ToyoMapper(newToyo[0]));
         } else {
           const toyoSwap = await this.getToyoSwap(
             walletAddress,
@@ -130,6 +134,33 @@ export class ToyoService {
     }
     return toyos;
   }
+
+  async updateToyoWallet(
+    walletAddress: string,
+    toyo: Parse.Object<Parse.Attributes>,
+  ) {
+    const newPlayer = await this.playerService.getPlayerByWalletAddress(
+      walletAddress,
+    );
+
+    const box = await this.boxService.getBoxByToyo(toyo);
+    if (box) {
+      const oldPlayer = await this.playerService.getPlayerByWalletAddress(
+        box.get('player').get('walletAddress'),
+      );
+
+      oldPlayer.relation('toyos').remove(toyo);
+      await oldPlayer.save();
+
+      newPlayer.relation('toyos').add(toyo);
+      await newPlayer.save();
+
+      return toyo;
+    }
+
+    return false;
+  }
+
   async getToyoById(id: string): Promise<ToyoModel> {
     const toyoId: string = Buffer.from(id, 'base64').toString('ascii');
 

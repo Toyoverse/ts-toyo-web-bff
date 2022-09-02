@@ -52,6 +52,29 @@ export class BoxService {
     }
   }
 
+  async getBoxByToyo(toyo: Parse.Object<Parse.Attributes>) {
+    const Boxes = Parse.Object.extend('Boxes', BoxModel);
+    const boxesQuery = new Parse.Query(Boxes);
+    boxesQuery.equalTo('toyo', toyo);
+    boxesQuery.includeAll();
+
+    try {
+      const result = await boxesQuery.find();
+
+      if (result.length < 1) {
+        response.status(404).send({
+          erros: ['Box not found!'],
+        });
+      }
+      return result[0];
+    } catch (error) {
+      console.log(error);
+      response.status(500).send({
+        error: [error.message],
+      });
+    }
+  }
+
   async getBoxesByWalletId(walletId: string) {
     try {
       const Players = Parse.Object.extend('Players');
