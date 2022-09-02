@@ -153,6 +153,8 @@ export class ToyoService {
       await oldPlayer.save();
 
       newPlayer.relation('toyos').add(toyo);
+      const parts = await toyo.relation('parts').query().find();
+      newPlayer.relation('toyoParts').add(parts);
       await newPlayer.save();
 
       return toyo;
