@@ -3,4 +3,6 @@ export interface IBoxOnChain{
     tokenId?: string,
     currentOwner?: string,
     transactionHash?: string,
+    currentStaker?: string,
+    isStaked?: boolean
 }
