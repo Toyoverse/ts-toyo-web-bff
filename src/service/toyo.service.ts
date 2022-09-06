@@ -7,7 +7,6 @@ import PartModel from 'src/models/Part.model';
 import { PartService } from './part.service';
 import { OnchainService } from './onchain.service';
 import { TypeId } from 'src/enums/SmartContracts';
-import { IToyo, IToyoPersona } from '../models/interfaces';
 import { ToyoPersonaService } from './toyoPersona.service';
 
 @Injectable()
@@ -148,7 +147,7 @@ export class ToyoService {
 
       toyo.parts = partsArray;
     }
-    
+
     return toyo;
   }
   private async partsMapper(toyoId: string): Promise<PartModel[]> {

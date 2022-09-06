@@ -2,9 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IToyoPersona } from './interfaces/IToyoPersona';
 
 export default class ToyoPersonaModel implements IToyoPersona {
-  
   @ApiProperty()
-  private objectId?: string;
+  id?: string;
   @ApiProperty()
   name: string;
   @ApiProperty()
@@ -24,13 +23,29 @@ export default class ToyoPersonaModel implements IToyoPersona {
   @ApiProperty()
   rarity?: string;
 
-  constructor() {}
-
-  get id() {
-    return this.objectId;
-  }
-  set id(objectId: string) {
-    const base64data = Buffer.from(objectId).toString('base64');
-    this.objectId = base64data;
+  constructor(attrs?: {
+    id?: string;
+    name: string;
+    thumbnail: string;
+    video: string;
+    bodyType: number;
+    createdAt?: Date;
+    updateAt?: Date;
+    region?: string;
+    description?: string;
+    rarity?: string;
+  }) {
+    if (attrs) {
+      this.id = attrs.id;
+      this.name = attrs.name;
+      this.thumbnail = attrs.thumbnail;
+      this.video = attrs.video;
+      this.bodyType = attrs.bodyType;
+      this.createdAt = attrs.createdAt;
+      this.updateAt = attrs.updateAt;
+      this.region = attrs.region;
+      this.description = attrs.description;
+      this.rarity = attrs.rarity;
+    }
   }
 }
