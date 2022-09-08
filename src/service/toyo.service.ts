@@ -113,7 +113,7 @@ export class ToyoService {
         return tOff.get('tokenId') === item.tokenId;
       });
       if (toyo) {
-        toyos.push(await this.ToyoMapper(toyo));
+        toyos.push(await this.ToyoMapper(toyo, null, item));
       } else {
         const newToyo = await this.findToyoByTokenId(item.tokenId);
         if (newToyo.length >= 1) {
@@ -121,13 +121,13 @@ export class ToyoService {
             walletAddress,
             newToyo[0],
           );
-          if (toyoUpdated) toyos.push(await this.ToyoMapper(newToyo[0]));
+          if (toyoUpdated) toyos.push(await this.ToyoMapper(newToyo[0], null, item));
         } else {
           const toyoSwap = await this.getToyoSwap(
             walletAddress,
             item.transactionHash,
           );
-          if (toyoSwap) toyos.push(await this.ToyoMapper(toyoSwap[0]));
+          if (toyoSwap) toyos.push(await this.ToyoMapper(toyoSwap[0], null, item));
           //this.toyoJobProducer.updateToyoSwap(walletAddress, item.transactionHash);
         }
       }
@@ -230,6 +230,7 @@ export class ToyoService {
   async ToyoMapper(
     result: Parse.Object<Parse.Attributes>,
     parts?: Parse.Object<Parse.Attributes>[],
+    item?: IBoxOnChain,
   ): Promise<ToyoModel> {
     const toyo: ToyoModel = new ToyoModel();
 
@@ -248,6 +249,9 @@ export class ToyoService {
           result.get('toyoPersonaOrigin').id,
         )
       : undefined;
+    toyo.isStaked = item
+        ? item.isStaked
+        : undefined
 
     if (parts) {
       const partsArray = [];

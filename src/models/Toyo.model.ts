@@ -24,6 +24,8 @@ export default class ToyoModel implements IToyo {
   transactionHash: string;
   @ApiProperty()
   toyoPersonaOrigin?: ToyoPersonaModel;
+  @ApiProperty()
+  isStaked?: boolean;
 
   constructor(attrs?: { id: string; name: string }) {
     if (attrs) {
