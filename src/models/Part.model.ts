@@ -3,12 +3,15 @@ import { Parts } from "./interfaces/Part";
 import ToyoPersonaModel from "./ToyoPersona.model";
 
 export default class PartModel implements Parts{
-    private objectId: string;
+    objectId: string;
     bonusStats: object;
     toyoTechnoalloy: string;
     cards: CardModel[];
     toyoPersona: ToyoPersonaModel;
     toyoPiece: string;
+    rarityId: string;
+    rarity: string;
+    level: number;
     stats: object;
     createdAt: Date;
     updateAt: Date;

@@ -14,7 +14,7 @@ export interface Player {
   toyoParts: Parts[];
   boxes: Box[];
   createdAt: Date;
-  updateAt: Date;
+  updatedAt: Date;
 
   getExpiresAtFormatted(expiresAt: Date): string;
 }

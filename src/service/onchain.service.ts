@@ -10,11 +10,13 @@ export class OnchainService {
   async getTokenOwnerEntityByWalletId(walletId: string): Promise<any> {
     const query = gql`
       {
-        tokenOwnerEntities(first: 500, where: {currentOwner: "${walletId}"}) {
+        tokenOwnerEntities(first: 500, where: {currentOwnerOrStaker: "${walletId}"}) {
             typeId,
             transactionHash,
             tokenId,
-            currentOwner
+            currentOwner,
+            currentStaker,
+            isStaked
         }
       }
     `;
@@ -33,11 +35,13 @@ export class OnchainService {
   ): Promise<any> {
     const query = gql`
       {
-        tokenOwnerEntities(first: 500, where: {currentOwner: "${walletId}", typeId_in: [${typeId}]}) {
+        tokenOwnerEntities(first: 500, where: {currentOwnerOrStaker: "${walletId}", typeId_in: [${typeId}]}) {
             typeId,
             transactionHash,
             tokenId,
-            currentOwner
+            currentOwner,
+            currentStaker,
+            isStaked
         }
       }
     `;
@@ -49,25 +53,26 @@ export class OnchainService {
 
     return data.tokenOwnerEntities;
   }
-  async getTokenOwnerEntityWithoutHashByWalletAndTypeId(
-    walletId: string,
-    typeId: Array<TypeId>,
-  ): Promise<any> {
+  
+  async getTokenSwappedEntitiesByWalletAndTokenId(walletId: string, transactionHash:string): Promise<any>{
     const query = gql`
-      {
-        tokenOwnerEntities(first: 500, where: {currentOwner: "${walletId}", typeId_in: [${typeId}]}) {
-            typeId,
-            tokenId,
-            currentOwner
-        }
+    {
+      tokenSwappedEntities(
+        first: 500
+        where: {sender: "${walletId}", transactionHash: "${transactionHash}"}
+      ) {
+        fromTokenId,
+        fromTypeId,
+        toTokenId,
+        toTypeId
       }
+    }
     `;
-
     const data: any = await request(
       this.configService.get<string>('THEGRAPH_URL'),
       query,
     );
 
-    return data.tokenOwnerEntities;
+    return data.tokenSwappedEntities;
   }
 }

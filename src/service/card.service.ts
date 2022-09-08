@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import CardModel from '../models/Card.model'
+import CardModel from '../models/Card.model';
 import * as Parse from 'parse/node';
 import { response } from 'express';
 import { json } from 'stream/consumers';
@@ -11,16 +11,16 @@ export class CardService {
     this.ParseServerConfiguration();
   }
 
-  async findCardById(id: string): Promise<CardModel>{
-    const Cards = Parse.Object.extend("Cards", CardModel);
+  async findCardById(id: string): Promise<CardModel> {
+    const Cards = Parse.Object.extend('Cards', CardModel);
     const cardsQuery = new Parse.Query(Cards);
     cardsQuery.equalTo('objectId', id);
-    
-    try{
+
+    try {
       const result = await cardsQuery.find();
-    
-      if (result.length < 1 || result[0].id !== id){
-        response.status(404).json({
+
+      if (result.length < 1 || result[0].id !== id) {
+        response.status(404).send({
           erros: ['Card not found!'],
         });
       }
@@ -28,16 +28,14 @@ export class CardService {
       const card: CardModel = this.CardMapper(result[0]);
 
       return card;
-    }
-    catch(error){
-      response.status(500).json({
+    } catch (error) {
+      response.status(500).send({
         error: [error.message],
       });
-    } 
-
+    }
   }
 
-  CardMapper(result: Parse.Object<Parse.Attributes>): CardModel{
+  CardMapper(result: Parse.Object<Parse.Attributes>): CardModel {
     const card: CardModel = new CardModel();
 
     card.id = result.id;
@@ -49,14 +47,14 @@ export class CardService {
     card.attackSubType = result.get('attackSubType');
     card.duration = result.get('duration');
     card.defenseType = result.get('defenseType');
-    card.attackAnimation= result.get('attackAnimation');
+    card.attackAnimation = result.get('attackAnimation');
     card.effectName = result.get('effectName');
     card.applyEffect = result.get('applyEffect');
     card.createdAt = result.get('createdAt');
     card.updateAt = result.get('updatedAt');
 
     return card;
-  } 
+  }
 
   /**
    * Function to configure ParseSDK

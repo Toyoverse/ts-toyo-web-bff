@@ -25,7 +25,12 @@ export default class ToyoModel implements IToyo {
   @ApiProperty()
   toyoPersonaOrigin?: ToyoPersonaModel;
 
-  constructor() {}
+  constructor(attrs?: { id: string; name: string }) {
+    if (attrs) {
+      this.id = attrs.id;
+      this.name = attrs.name;
+    }
+  }
 
   get id() {
     return this.objectId;

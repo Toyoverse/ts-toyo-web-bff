@@ -8,6 +8,10 @@ import { OnchainService } from './onchain.service';
 import { TypeId } from 'src/enums/SmartContracts';
 import { BoxService } from './box.service';
 import { json } from 'stream/consumers';
+import { IBoxOnChain } from 'src/models/interfaces/IBoxOnChain';
+import BoxModel from 'src/models/Box.model';
+import { BoxJobProducer } from 'src/jobs/boxJob-producer';
+import { valueFromAST } from 'graphql';
 
 @Injectable()
 export class EnvironmentService {
@@ -16,6 +20,7 @@ export class EnvironmentService {
     private readonly playerService: PlayerService,
     private readonly onchainService: OnchainService,
     private readonly boxService: BoxService,
+    private readonly boxJobProducer: BoxJobProducer,
   ) {
     this.ParseServerConfiguration();
   }
@@ -30,7 +35,7 @@ export class EnvironmentService {
       const result = await playerQuery.find();
 
       if (result.length < 1 || result[0].get('walletAddress') !== walletId) {
-        response.status(404).json({
+        response.status(404).send({
           erros: ['Player not found!'],
         });
       }
@@ -40,7 +45,7 @@ export class EnvironmentService {
 
       return player;
     } catch (error) {
-      response.status(500).json({
+      response.status(500).send({
         error: [error.message],
       });
     }
@@ -48,67 +53,56 @@ export class EnvironmentService {
 
   async findBoxesByWalletId(walletAddress: string) {
     try {
-    const boxesOnChain =
-      await this.onchainService.getTokenOwnerEntityWithoutHashByWalletAndTypeId(
+      const boxesOnChain: IBoxOnChain[] =
+        await this.onchainService.getTokenOwnerEntityByWalletAndTypeId(
+          walletAddress,
+          [
+            TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX,
+            TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX,
+            TypeId.OPEN_JAKANA_SEED_BOX,
+            TypeId.OPEN_KYTUNT_SEED_BOX,
+            TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX,
+            TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX,
+            TypeId.TOYO_KYTUNT_SEED_BOX,
+            TypeId.TOYO_JAKANA_SEED_BOX,
+          ],
+        );
+      const boxesOffChain = await this.boxService.getBoxesByWalletId(
         walletAddress,
-        [
-          TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX,
-          TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX,
-          TypeId.OPEN_JAKANA_SEED_BOX,
-          TypeId.OPEN_KYTUNT_SEED_BOX,
-          TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX,
-          TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX,
-          TypeId.TOYO_KYTUNT_SEED_BOX,
-          TypeId.TOYO_JAKANA_SEED_BOX,
-        ],
       );
-    const boxesOffChain = await this.boxService.getBoxesByWalletId(
-      walletAddress,
-    );
 
-    // TODO Depois...
-    // if (boxesOnChain.length !== boxesOffChain.length) {
-    //   //precisa rodar background job para atualizar dados
-    // }
-  
-    const boxes = []
-
-    for (const box of boxesOnChain){
-      let result = boxesOffChain.find(value => value.tokenId === box.tokenId);
-
-      if (!result){
-        boxes.push({
-          ...box,
-          isOpen: this.isOpen(box.typeId), 
-          lastUnboxingStarted: null,
-          modifiers: this.boxService.getModifiers(box.typeId),
-          type: this.boxService.getType(box.typeId),
-          region: this.boxService.getRegion(box.typeId)
+      const boxes = [];
+      for (const box of boxesOnChain) {
+        const result = boxesOffChain.find((value) => {
+          return value.tokenId === box.tokenId && value.typeId === box.typeId;
         });
+
+        if (!result) {
+          const boxOff = await this.boxService.saveBox(box);
+          if (boxOff) {
+            boxes.push({
+              boxOff,
+              currentOwner: walletAddress,
+            });
+          }
+        } else {
+          boxes.push({
+            ...result,
+            currentOwner: walletAddress,
+          });
+        }
       }
-      else {
-        boxes.push({
-          ...result,
-          currentOwner: walletAddress,
-        });
-      }
+
+      return {
+        wallet: walletAddress,
+        boxes: boxes,
+      };
+    } catch (error) {
+      console.log(error);
+      response.status(500).send({
+        error: [error.message],
+      });
     }
-
-    return {
-      wallet: walletAddress,
-      boxes: boxes,
-    };
-  } catch (error) {
-    response.status(500).json({
-      error: [error.message],
-    });
-  }
-  }
-  private isOpen(box: any): boolean{
-    return box == TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX ||
-            box == TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX ||
-            box == TypeId.OPEN_JAKANA_SEED_BOX ||
-            box == TypeId.OPEN_KYTUNT_SEED_BOX;
   }
 
   /**

@@ -7,6 +7,10 @@ export default class ToyoPersonaModel implements IToyoPersona {
   @ApiProperty()
   name: string;
   @ApiProperty()
+  rarityId: number;
+  @ApiProperty()
+  rarity?: string;
+  @ApiProperty()
   thumbnail: string;
   @ApiProperty()
   video: string;
@@ -20,8 +24,6 @@ export default class ToyoPersonaModel implements IToyoPersona {
   region?: string;
   @ApiProperty()
   description?: string;
-  @ApiProperty()
-  rarity?: string;
 
   constructor(attrs?: {
     id?: string;

@@ -7,12 +7,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const options: cors.CorsOptions = {
-    methods: 'GET,POST',
-    origin: '*',
-  };
-
-  app.use(cors(options));
   app.use(helmet());
 
   const config = new DocumentBuilder()
@@ -24,6 +18,13 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
+
+  const options: cors.CorsOptions = {
+    methods: 'GET,POST,OPTIONS',
+    origin: '*',
+  };
+
+  app.use(cors(options));
 
   await app.listen(process.env.PORT || 3000);
 }
