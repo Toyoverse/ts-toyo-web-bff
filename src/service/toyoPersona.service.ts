@@ -33,14 +33,23 @@ export class ToyoPersonaService {
     }
   }
 
+  async findToyoPersonas(): Promise<ToyoPersona[]> {
+    const parseQuery = new Parse.Query('ToyoPersona');
+    const results = await parseQuery.find();
+
+    return results.map(this.ToyoPersonaMapper);
+  }
+
   ToyoPersonaMapper(result: Parse.Object<Parse.Attributes>): ToyoPersona {
     const toyoPersona: ToyoPersona = new ToyoPersona();
-    toyoPersona.objectId = result.id;
+    toyoPersona.id = result.id;
     toyoPersona.name = result.get('name');
     toyoPersona.rarityId = result.get('rarityId');
     toyoPersona.rarity = result.get('rarity');
+    toyoPersona.description = result.get('description');
     toyoPersona.thumbnail = result.get('thumbnail');
     toyoPersona.video = result.get('video');
+    toyoPersona.region = result.get('region');
     toyoPersona.bodyType = result.get('bodyType');
     toyoPersona.createdAt = result.get('createdAt');
     toyoPersona.updateAt = result.get('updatedAt');

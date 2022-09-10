@@ -1,6 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AppController } from './controller/app.controller';
+import { AppController, ToyoPersonaController } from './controller';
 import { AuthMiddleware } from './middlewares/auth.middleware';
 import {
   EnvironmentService,
@@ -27,7 +27,7 @@ import di from './di';
       cache: true,
     }),
   ],
-  controllers: [AppController],
+  controllers: [AppController, ToyoPersonaController],
   providers: [
     BoxService,
     EnvironmentService,
