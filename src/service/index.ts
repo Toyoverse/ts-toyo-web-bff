@@ -13,3 +13,4 @@ export * from '../jobs/boxJob-producer';
 export * from '../jobs/toyoJob-consumer';
 export * from '../jobs/toyoJob-producer';
 export * from './hashbox.service';
+export * from './training.service';

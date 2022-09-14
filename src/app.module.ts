@@ -17,6 +17,7 @@ import {
   ToyoJobConsumer,
   ToyoJobProducer,
   HashBoxService,
+  TrainingService,
 } from './service';
 import { AESCrypt } from './utils/crypt/aes-crypt';
 import di from './di';
@@ -43,6 +44,7 @@ import di from './di';
     ToyoJobProducer,
     ToyoJobConsumer,
     HashBoxService,
+    TrainingService,
     { provide: di.AESCrypt, useClass: AESCrypt },
   ],
 })

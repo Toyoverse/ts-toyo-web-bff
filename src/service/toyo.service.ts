@@ -7,8 +7,9 @@ import PartModel from 'src/models/Part.model';
 import { PlayerService } from './player.service';
 import { PartService } from './part.service';
 import { OnchainService } from './onchain.service';
-import { TypeId } from 'src/enums/SmartContracts';
 import { ToyoPersonaService } from './toyoPersona.service';
+import { TrainingService } from './training.service';
+import { TypeId } from 'src/enums/SmartContracts';
 import { IBoxOnChain } from '../models/interfaces/IBoxOnChain';
 import { ILog } from 'src/models/interfaces/ILog';
 import { IUpdateToyo } from 'src/models/interfaces/IUpdateToyo';
@@ -22,6 +23,7 @@ export class ToyoService {
     private readonly partService: PartService,
     private readonly toyoPersonaService: ToyoPersonaService,
     private readonly onchainService: OnchainService,
+    private readonly trainingService: TrainingService,
     @Inject(forwardRef(() => ToyoJobProducer))
     private readonly toyoJobProducer: ToyoJobProducer,
     @Inject(forwardRef(() => BoxService))
@@ -113,7 +115,11 @@ export class ToyoService {
         return tOff.get('tokenId') === item.tokenId;
       });
       if (toyo) {
-        toyos.push(await this.ToyoMapper(toyo, null, item));
+        const toyoMapped: ToyoModel = await this.ToyoMapper(toyo, null, item);
+        if (toyoMapped.isStaked) {
+          await this.resetClaimIfExpiredOnBlockchain(toyo);
+        }
+        toyos.push(toyoMapped);
       } else {
         const newToyo = await this.findToyoByTokenId(item.tokenId);
         if (newToyo.length >= 1) {
@@ -121,14 +127,17 @@ export class ToyoService {
             walletAddress,
             newToyo[0],
           );
-          if (toyoUpdated) toyos.push(await this.ToyoMapper(newToyo[0], null, item));
+          if (toyoUpdated) {
+            toyos.push(await this.ToyoMapper(newToyo[0], null, item));
+          }
         } else {
           const toyoSwap = await this.getToyoSwap(
             walletAddress,
             item.transactionHash,
           );
-          if (toyoSwap) toyos.push(await this.ToyoMapper(toyoSwap[0], null, item));
-          //this.toyoJobProducer.updateToyoSwap(walletAddress, item.transactionHash);
+          if (toyoSwap) {
+            toyos.push(await this.ToyoMapper(toyoSwap[0], null, item));
+          }
         }
       }
     }
@@ -234,9 +243,7 @@ export class ToyoService {
   ): Promise<ToyoModel> {
     const toyo: ToyoModel = new ToyoModel();
 
-    toyo.id = result.id
-      ? result.id
-      : undefined;
+    toyo.id = result.id ? result.id : undefined;
     toyo.name = result.get('name');
     toyo.hasTenParts = result.get('hasTenParts');
     toyo.isToyoSelected = result.get('isToyoSelected');
@@ -249,9 +256,7 @@ export class ToyoService {
           result.get('toyoPersonaOrigin').id,
         )
       : undefined;
-    toyo.isStaked = item
-        ? item.isStaked
-        : undefined
+    toyo.isStaked = item ? item.isStaked : undefined;
 
     if (parts) {
       const partsArray = [];
@@ -348,6 +353,36 @@ export class ToyoService {
       });
     }
   }
+
+  async resetClaimIfExpiredOnBlockchain(toyo: Parse.Object<Parse.Attributes>) {
+    //verifcar se foi feito o claim no db
+    const trainings = await this.trainingService.getClosedTrainingsByToyoId(
+      toyo,
+    );
+
+    if (trainings.length > 0) {
+      const claims = await this.trainingService.getClaimsByTokenId(
+        toyo.get('tokenId'),
+      );
+
+      if (trainings.length !== claims.length) {
+        //ordena os treinos por data
+        trainings.sort((a, b) => {
+          return (
+            new Date(b.get('updatedAt')).getTime() -
+            new Date(a.get('updatedAt')).getTime()
+          );
+        });
+        trainings[0].unset('claimedAt');
+        trainings[0].unset('signature');
+        trainings[0].set('isTraining', true);
+        await trainings[0].save();
+      }
+    }
+
+    return;
+  }
+
   private async partsMapper(toyoId: string): Promise<PartModel[]> {
     const Toyo = Parse.Object.extend('Toyo');
     const toyoQuery = new Parse.Query(Toyo);
