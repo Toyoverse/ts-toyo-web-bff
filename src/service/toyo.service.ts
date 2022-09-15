@@ -116,9 +116,6 @@ export class ToyoService {
       });
       if (toyo) {
         const toyoMapped: ToyoModel = await this.ToyoMapper(toyo, null, item);
-        if (toyoMapped.isStaked) {
-          await this.resetClaimIfExpiredOnBlockchain(toyo);
-        }
         toyos.push(toyoMapped);
       } else {
         const newToyo = await this.findToyoByTokenId(item.tokenId);
