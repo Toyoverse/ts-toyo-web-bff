@@ -65,6 +65,8 @@ export class EnvironmentService {
             TypeId.TOYO_FORTIFIED_KYTUNT_SEED_BOX,
             TypeId.TOYO_KYTUNT_SEED_BOX,
             TypeId.TOYO_JAKANA_SEED_BOX,
+            TypeId.CLOSED_XEON_SEED_BOX,
+            TypeId.OPEN_XEON_SEED_BOX,
           ],
         );
       const boxesOffChain = await this.boxService.getBoxesByWalletId(

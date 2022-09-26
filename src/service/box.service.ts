@@ -182,18 +182,21 @@ export class BoxService {
         }
       }
 
-      box.set("transactionHash", boxOn.transactionHash);
-      box.set("tokenId" , boxOn.tokenId);
-      box.set("typeId" , boxOn.typeId);
-      box.set("isOpen" , isOpen);
-      box.set("modifiers" , this.getModifiers(boxOn.typeId));
-      box.set("type" , type);
-      box.set("typeIdClosedBox" , boxOpen ? boxOpen.fromTypeId : boxOn.typeId);
-      box.set("tokenIdClosedBox" , boxOpen ? boxOpen.fromTokenId : boxOn.tokenId);
-      box.set("typeIdOpenBox" , isOpen ? boxOn.typeId : undefined);
-      box.set("tokenIdOpenBox" , isOpen ? boxOn.tokenId : undefined);
-      box.set("region" , region[0]);
-      box.set("player" , player[0]);
+      box.set('transactionHash', boxOn.transactionHash);
+      box.set('tokenId', boxOn.tokenId);
+      box.set('typeId', boxOn.typeId);
+      box.set('isOpen', isOpen);
+      box.set('modifiers', this.getModifiers(boxOn.typeId));
+      box.set('type', type);
+      box.set('typeIdClosedBox', boxOpen ? boxOpen.fromTypeId : boxOn.typeId);
+      box.set(
+        'tokenIdClosedBox',
+        boxOpen ? boxOpen.fromTokenId : boxOn.tokenId,
+      );
+      box.set('typeIdOpenBox', isOpen ? boxOn.typeId : undefined);
+      box.set('tokenIdOpenBox', isOpen ? boxOn.tokenId : undefined);
+      box.set('region', region[0]);
+      box.set('player', player[0]);
 
       await box.save();
 
@@ -247,9 +250,7 @@ export class BoxService {
     result: Parse.Object<Parse.Attributes>,
   ): Promise<BoxModel> {
     const box: BoxModel = new BoxModel();
-    box.id = result.id
-      ? result.id
-      : undefined;
+    box.id = result.id ? result.id : undefined;
     box.typeId = result.get('typeId');
     box.type = result.get('type')
       ? result.get('type')
@@ -305,9 +306,14 @@ export class BoxService {
       type == TypeId.TOYO_KYTUNT_SEED_BOX
     ) {
       return 'KYTUNT';
+    } else if (
+      type == TypeId.CLOSED_XEON_SEED_BOX ||
+      type == TypeId.OPEN_XEON_SEED_BOX
+    ) {
+      return 'XEON';
     }
   }
-  getModifiers(type:string ) {
+  getModifiers(type: string) {
     const key: number = parseInt(type, 10);
     switch (key) {
       case TypeId.TOYO_FORTIFIED_JAKANA_SEED_BOX:
@@ -329,7 +335,7 @@ export class BoxService {
           },
         ];
         break;
-        case TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX:
+      case TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX:
         return [
           {
             name: 'Fortified',
@@ -361,7 +367,7 @@ export class BoxService {
           },
         ];
         break;
-        case TypeId.OPEN_JAKANA_SEED_BOX:
+      case TypeId.OPEN_JAKANA_SEED_BOX:
         return [
           {
             name: 'Jakana',
@@ -394,7 +400,7 @@ export class BoxService {
           },
         ];
         break;
-        case TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX:
+      case TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX:
         return [
           {
             name: 'Fortified',
@@ -428,7 +434,7 @@ export class BoxService {
           },
         ];
         break;
-        case TypeId.OPEN_KYTUNT_SEED_BOX:
+      case TypeId.OPEN_KYTUNT_SEED_BOX:
         return [
           {
             name: 'Kytunt',
@@ -438,6 +444,36 @@ export class BoxService {
             modification: {
               theme: 'Classic',
               region: 'Kytunt',
+            },
+          },
+        ];
+        break;
+
+      case TypeId.CLOSED_XEON_SEED_BOX:
+        return [
+          {
+            name: 'Xeon',
+            type: '4',
+            description: 'Contain only Classic Xeon Toyoparts.',
+            restrictions: 'Available only until 2022-12-31',
+            modification: {
+              theme: 'Classic',
+              region: 'Xeon',
+            },
+          },
+        ];
+        break;
+
+      case TypeId.OPEN_XEON_SEED_BOX:
+        return [
+          {
+            name: 'Kytunt',
+            type: '4',
+            description: 'Contain only Classic Xeon Toyoparts.',
+            restrictions: 'Available only until 2022-12-31',
+            modification: {
+              theme: 'Classic',
+              region: 'Xeon',
             },
           },
         ];
@@ -459,7 +495,9 @@ export class BoxService {
       type == TypeId.OPEN_JAKANA_SEED_BOX ||
       type == TypeId.OPEN_KYTUNT_SEED_BOX ||
       type == TypeId.TOYO_JAKANA_SEED_BOX ||
-      type == TypeId.TOYO_KYTUNT_SEED_BOX
+      type == TypeId.TOYO_KYTUNT_SEED_BOX ||
+      type == TypeId.OPEN_XEON_SEED_BOX ||
+      type == TypeId.CLOSED_XEON_SEED_BOX
     ) {
       return 'SIMPLE';
     }
@@ -470,7 +508,8 @@ export class BoxService {
       box == TypeId.OPEN_FORTIFIED_JAKANA_SEED_BOX ||
       box == TypeId.OPEN_FORTIFIED_KYTUNT_SEED_BOX ||
       box == TypeId.OPEN_JAKANA_SEED_BOX ||
-      box == TypeId.OPEN_KYTUNT_SEED_BOX
+      box == TypeId.OPEN_KYTUNT_SEED_BOX ||
+      box == TypeId.OPEN_XEON_SEED_BOX
     );
   }
   /**
