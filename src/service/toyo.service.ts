@@ -15,6 +15,7 @@ import { ILog } from 'src/models/interfaces/ILog';
 import { IUpdateToyo } from 'src/models/interfaces/IUpdateToyo';
 import { BoxService, HashBoxService, ToyoJobProducer } from '.';
 import { ISwappedEntities } from 'src/models/interfaces/ISwappedEntities';
+import ToyoPersonaModel from 'src/models/ToyoPersona.model';
 
 @Injectable()
 export class ToyoService {
@@ -75,16 +76,18 @@ export class ToyoService {
       });
     }
   }
+  private createPlayerQueryByWallet(walletAddress: string): Parse.Query {
+    const Player = Parse.Object.extend('Players');
+    const playerQuery = new Parse.Query(Player);
+    return playerQuery.equalTo('walletAddress', walletAddress);
+  }
 
   async getOffChainToyos(walletAddress: string): Promise<Parse.Object[]> {
     try {
-      const Toyo = Parse.Object.extend('Players');
-      const toyoQuery: Parse.Query = new Parse.Query(Toyo);
+      const playerQuery = this.createPlayerQueryByWallet(walletAddress);
 
-      toyoQuery.equalTo('walletAddress', walletAddress);
-
-      const player = await toyoQuery.find();
-      const toyos = await player[0]
+      const player = await playerQuery.first();
+      const toyos = await player
         .relation('toyos')
         .query()
         .limit(500)
@@ -101,7 +104,6 @@ export class ToyoService {
   }
 
   async getToyosByWalletAddress(walletAddress: string): Promise<ToyoModel[]> {
-    console.log('walletAddress: ' + walletAddress);
     const onChainToyos: IBoxOnChain[] =
       await this.onchainService.getTokenOwnerEntityByWalletAndTypeId(
         walletAddress,
@@ -109,7 +111,8 @@ export class ToyoService {
       );
 
     const offChainToyos = await this.getOffChainToyos(walletAddress);
-    const toyos: Array<ToyoModel> = [];
+    const toyos: ToyoModel[] = await this.getToyomataByWallet(walletAddress);
+    
     for (const item of onChainToyos) {
       const toyo: Parse.Object = offChainToyos.find((tOff) => {
         return tOff.get('tokenId') === item.tokenId;
@@ -139,6 +142,91 @@ export class ToyoService {
       }
     }
     return toyos;
+  }
+  async getToyomataByWallet(walletAddress: string): Promise<ToyoModel[]> {
+    try {
+      const playerQuery = this.createPlayerQueryByWallet(walletAddress);
+
+      const player = await playerQuery.first();
+      const toyomatas = await player
+        .relation('toyoAutomatas')
+        .query()
+        .include('toyomataPersona')
+        .findAll();
+
+      if (toyomatas && toyomatas.length === 0) {
+        toyomatas.push(await this.crateToyomata('Slickomata'));
+        toyomatas.push(await this.crateToyomata('Automatatsu'));
+      } else if (
+        toyomatas.length === 1 &&
+        toyomatas[0].get('name') === 'Slickomata'
+      ) {
+        toyomatas.push(await this.crateToyomata('Automatatsu'));
+      } else if (
+        toyomatas.length === 1 &&
+        toyomatas[0].get('name') === 'Automatatsu'
+      ) {
+        toyomatas.push(await this.crateToyomata('Slickomata'));
+      }
+
+      const toyos: ToyoModel[] = [];
+      for (const item of toyomatas) {
+        const toyo = await this.ToyoMapper(item);
+        toyo.toyoPersonaOrigin = item.get('toyomataPersona')
+          ? await this.toyoPersonaService.findToyomataPersonaById(
+              item.get('toyomataPersona').id,
+            )
+          : undefined;
+        toyo.isAutomata = true;
+        toyos.push(toyo);
+      }
+      const relationPlayer = player.relation('toyoAutomatas');
+      relationPlayer.add(toyomatas);
+
+      await player.save();
+      return toyos;
+    } catch (error) {
+      console.log(error);
+      response.status(500).send({
+        error: [error.message],
+      });
+    }
+  }
+  private async crateToyomata(
+    name: string,
+  ): Promise<Parse.Object<Parse.Attributes>> {
+    const Toyomata = Parse.Object.extend('Toyomata', ToyoModel);
+    const toyomata = new Toyomata();
+
+    const ToyomataPersona = Parse.Object.extend(
+      'ToyomataPersona',
+      ToyoPersonaModel,
+    );
+    const personaQuery = new Parse.Query(ToyomataPersona);
+    personaQuery.equalTo('name', name);
+    const resultPersona = await personaQuery.first();
+
+    toyomata.set('name', name);
+    toyomata.set('tokenId', this.generateToken());
+    toyomata.set('toyomataPersona', resultPersona);
+    const { parts, toyoLevel } = this.partService.buildParts(resultPersona);
+    const toyomataParts = await this.partService.saveParts(
+      parts,
+      resultPersona,
+    );
+    const partsRelation = toyomata.relation('toyomataParts');
+    partsRelation.add(toyomataParts);
+    await toyomata.save();
+
+    return toyomata;
+  }
+
+  private generateToken(): string {
+    const min = Math.ceil(1);
+    const max = Math.floor(9999);
+    const random = Math.floor(Math.random() * (max - min + 1) + min);
+
+    return '_'.concat(random.toString());
   }
 
   async updateToyoWallet(

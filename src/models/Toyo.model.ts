@@ -26,6 +26,10 @@ export default class ToyoModel implements IToyo {
   toyoPersonaOrigin?: ToyoPersonaModel;
   @ApiProperty()
   isStaked?: boolean;
+  @ApiProperty()
+  isAutomata?: boolean;
+  @ApiProperty()
+  level?: number;
 
   constructor(attrs?: { id: string; name: string }) {
     if (attrs) {

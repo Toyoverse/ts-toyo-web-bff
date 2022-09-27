@@ -32,6 +32,28 @@ export class ToyoPersonaService {
       });
     }
   }
+  async findToyomataPersonaById(id: string): Promise<ToyoPersona> {
+    const toyoPersona = Parse.Object.extend('ToyomataPersona', ToyoPersona);
+    const toyoPersonaQuery = new Parse.Query(toyoPersona);
+    toyoPersonaQuery.equalTo('objectId', id);
+
+    try {
+      const result = await toyoPersonaQuery.first();
+      if (result.id !== id) {
+        response.status(404).send({
+          erros: ['Toyomata persona not found!'],
+        });
+      }
+
+      const toyo = this.ToyoPersonaMapper(result);
+
+      return toyo;
+    } catch (error) {
+      response.status(500).send({
+        error: [error.message],
+      });
+    }
+  }
 
   async findToyoPersonas(): Promise<ToyoPersona[]> {
     const parseQuery = new Parse.Query('ToyoPersona');
@@ -42,7 +64,7 @@ export class ToyoPersonaService {
 
   ToyoPersonaMapper(result: Parse.Object<Parse.Attributes>): ToyoPersona {
     const toyoPersona: ToyoPersona = new ToyoPersona();
-    toyoPersona.id = result.id;
+    toyoPersona.id = result.id ? result.id : undefined;
     toyoPersona.name = result.get('name');
     toyoPersona.rarityId = result.get('rarityId');
     toyoPersona.rarity = result.get('rarity');
