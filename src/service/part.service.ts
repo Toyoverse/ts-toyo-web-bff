@@ -127,8 +127,8 @@ export class PartService {
       luck: 0,
     };
     for (let index = 0; index < partsName.length; index++) {
-      const level = this._mapLevel(rarity);
-      let sumStats = this._mapSumStats(level) - 5;
+      const level = this._mapLevel();
+      let sumStats = this._mapSumStats(level) - 12;
 
       const part: any = {
         toyoPiece: partsName[index],
@@ -168,7 +168,6 @@ export class PartService {
       }
 
       delete part.justTheStats;
-      part.stats['heartbond'] = 20;
 
       parts.push(part);
     }
@@ -177,7 +176,7 @@ export class PartService {
     const maxLevel: number | undefined = Math.max(...levels);
     return { parts, toyoLevel: maxLevel };
   }
-  private _mapLevel(rarity: number): number {
+  private _mapLevel(): number {
     let levels = [];
     let index: number;
 
@@ -188,40 +187,33 @@ export class PartService {
   private _mapSumStats(level: number): number {
     let minSum = 0;
     let maxSum = 0;
-    //TO DO aguardando retorno de Kevin
     const _mapRandomStat = (minSum: number, maxSum: number) =>
       Math.floor(Math.random() * (maxSum - minSum + 1) + minSum);
+    if (level !== 1) {
+      switch (level) {
+        case 2:
+          minSum = 12;
+          maxSum = 20;
+          break;
+        case 3:
+          minSum = 20;
+          maxSum = 30;
+          break;
+        case 4:
+          minSum = 30;
+          maxSum = 40;
+          break;
+        case 5:
+          minSum = 40;
+          maxSum = 50;
+          break;
+        default:
+          throw new Error('Invalid level');
+      }
 
-    switch (level) {
-      case 7:
-        minSum = 59;
-        maxSum = 68;
-        break;
-      case 8:
-        minSum = 68;
-        maxSum = 77;
-        break;
-      case 9:
-        minSum = 77;
-        maxSum = 86;
-        break;
-      case 10:
-        minSum = 86;
-        maxSum = 95;
-        break;
-      case 11:
-        minSum = 95;
-        maxSum = 103;
-        break;
-      case 12:
-        minSum = 103;
-        maxSum = 111;
-        break;
-      default:
-        throw new Error('Invalid level');
+      return _mapRandomStat(minSum, maxSum);
     }
-
-    return _mapRandomStat(minSum, maxSum);
+    return 12;
   }
   async saveParts(
     parts: ToyoPart[],
