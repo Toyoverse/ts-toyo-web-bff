@@ -5,7 +5,7 @@ export interface Parts {
   id: string;
   bonusStats: object;
   toyoTechnoalloy: string;
-  cards: Card[];
+  cards?: Card[];
   toyoPersona: IToyoPersona;
   toyoPiece: string;
   rarityId: string;

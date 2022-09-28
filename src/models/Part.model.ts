@@ -6,7 +6,7 @@ export default class PartModel implements Parts{
     objectId: string;
     bonusStats: object;
     toyoTechnoalloy: string;
-    cards: CardModel[];
+    cards?: CardModel[];
     toyoPersona: ToyoPersonaModel;
     toyoPiece: string;
     rarityId: string;
@@ -15,7 +15,9 @@ export default class PartModel implements Parts{
     stats: object;
     createdAt: Date;
     updateAt: Date;
-
+    isNFT?: boolean;
+    isAutomata?:boolean;
+     
     constructor(){}
 
     get id(){
