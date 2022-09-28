@@ -43,16 +43,43 @@ export class ToyoService {
     toyoQuery.equalTo('objectId', id);
 
     try {
-      const result = await toyoQuery.find();
+      const result = await toyoQuery.first();
 
-      if (result.length < 1 || result[0].id !== id) {
+      if (!result) {
+        return undefined;
+      }
+      const parts = await result.relation('parts').query().find();
+      const toyo: ToyoModel = await this.ToyoMapper(result, parts);
+
+      return toyo;
+    } catch (error) {
+      response.status(500).send({
+        error: [error.message],
+      });
+    }
+  }
+  async findToyomataById(id: string): Promise<ToyoModel> {
+    const Toyomata = Parse.Object.extend('Toyomata');
+    const toyomataQuery = new Parse.Query(Toyomata);
+    toyomataQuery.equalTo('objectId', id);
+
+    try {
+      const result = await toyomataQuery.first();
+
+      if (!result) {
         response.status(404).send({
           erros: ['Toyo not found!'],
         });
         return;
       }
-      const parts = await result[0].relation('parts').query().find();
-      const toyo: ToyoModel = await this.ToyoMapper(result[0], parts);
+
+      const parts = await result.relation('toyomataParts').query().findAll();
+      const toyo: ToyoModel = await this.ToyoMapper(result, parts);
+      toyo.toyoPersonaOrigin =
+        await this.toyoPersonaService.findToyomataPersonaById(
+          result.get('toyomataPersona').id,
+        );
+      toyo.isAutomata = true;
 
       return toyo;
     } catch (error) {
@@ -112,7 +139,7 @@ export class ToyoService {
 
     const offChainToyos = await this.getOffChainToyos(walletAddress);
     const toyos: ToyoModel[] = await this.getToyomataByWallet(walletAddress);
-    
+
     for (const item of onChainToyos) {
       const toyo: Parse.Object = offChainToyos.find((tOff) => {
         return tOff.get('tokenId') === item.tokenId;
@@ -260,10 +287,13 @@ export class ToyoService {
   async getToyoById(id: string): Promise<ToyoModel> {
     const toyoId: string = Buffer.from(id, 'base64').toString('ascii');
 
-    const toyo: ToyoModel = await this.findToyoById(toyoId);
+    let toyo: ToyoModel = await this.findToyoById(toyoId);
+
+    if (!toyo) toyo = await this.findToyomataById(toyoId);
 
     return toyo;
   }
+
   async getToyoSwap(
     walletId: string,
     transactionHash: string,
@@ -346,7 +376,12 @@ export class ToyoService {
     if (parts) {
       const partsArray = [];
       for (const part of parts) {
-        partsArray.push(await this.partService.PartMapper(part));
+        let toyoPart = await this.partService.PartMapper(part);
+        if (toyoPart.toyoTechnoalloy !== 'SIDERITE') {
+          toyoPart.isAutomata = true;
+        }
+
+        partsArray.push(toyoPart);
       }
 
       toyo.parts = partsArray;

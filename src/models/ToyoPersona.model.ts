@@ -11,9 +11,9 @@ export default class ToyoPersonaModel implements IToyoPersona {
   @ApiProperty()
   rarity?: string;
   @ApiProperty()
-  thumbnail: string;
+  thumbnail?: string;
   @ApiProperty()
-  video: string;
+  video?: string;
   @ApiProperty()
   bodyType: number;
   @ApiProperty()

@@ -33,19 +33,17 @@ export class ToyoPersonaService {
     }
   }
   async findToyomataPersonaById(id: string): Promise<ToyoPersona> {
-    const toyoPersona = Parse.Object.extend('ToyomataPersona', ToyoPersona);
-    const toyoPersonaQuery = new Parse.Query(toyoPersona);
+    const ToyomataPersona = Parse.Object.extend('ToyomataPersona', ToyoPersona);
+    const toyoPersonaQuery = new Parse.Query(ToyomataPersona);
     toyoPersonaQuery.equalTo('objectId', id);
-
     try {
       const result = await toyoPersonaQuery.first();
-      if (result.id !== id) {
+      if (!result) {
         response.status(404).send({
           erros: ['Toyomata persona not found!'],
         });
       }
-
-      const toyo = this.ToyoPersonaMapper(result);
+      const toyo = this.ToyomataPersonaMapper(result);
 
       return toyo;
     } catch (error) {
@@ -73,6 +71,19 @@ export class ToyoPersonaService {
     toyoPersona.video = result.get('video');
     toyoPersona.region = result.get('region');
     toyoPersona.bodyType = result.get('bodyType');
+    toyoPersona.createdAt = result.get('createdAt');
+    toyoPersona.updateAt = result.get('updatedAt');
+
+    return toyoPersona;
+  }
+  ToyomataPersonaMapper(result: Parse.Object<Parse.Attributes>): ToyoPersona {
+    const toyoPersona: ToyoPersona = new ToyoPersona();
+    toyoPersona.id = result.id ? result.id : undefined;
+    toyoPersona.name = result.get('name');
+    toyoPersona.rarityId = result.get('rarityId');
+    toyoPersona.rarity = result.get('rarity');
+    toyoPersona.description = result.get('description');
+    toyoPersona.region = result.get('region');
     toyoPersona.createdAt = result.get('createdAt');
     toyoPersona.updateAt = result.get('updatedAt');
 

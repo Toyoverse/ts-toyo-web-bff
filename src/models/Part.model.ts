@@ -16,6 +16,7 @@ export default class PartModel implements Parts{
     createdAt: Date;
     updateAt: Date;
     isNFT?: boolean;
+    isAutomata?:boolean;
      
     constructor(){}
 
